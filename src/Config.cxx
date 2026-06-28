@@ -32,6 +32,20 @@ uint64_t Config::getMaxFpuThreads()
     return MAX_FPU_THREADS;
 }
 
+int Config::getLevel()
+{
+    UPDATE_INTERVAL = (int)getInt64 ("level");
+
+    return UPDATE_INTERVAL;
+}
+
+
+int Config::getDataUpdateInterval()
+{
+    UPDATE_INTERVAL = (int)getUint64 ("dataUpdateInterval");
+
+    return UPDATE_INTERVAL;
+}
 
 
 
@@ -133,6 +147,8 @@ bool Config::update()
                     getMaxThreads(); // The maximum number of threads allocated to the application
                     getMaxObjects();
                     getMaxFpuThreads();
+                    getLevel();
+                    getDataUpdateInterval();
 
                     std::time (&timestamp);
                 }

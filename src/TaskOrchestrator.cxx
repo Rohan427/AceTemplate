@@ -4,10 +4,14 @@
 
 namespace Manager
 {
-    TaskOrchestrator* TaskOrchestrator::s_instance = 0;
-    ACE_Thread_Mutex TaskOrchestrator::s_creationLock;
+    template<typename DT, typename IT>
+    TaskOrchestrator<DT, IT>* TaskOrchestrator<DT, IT>::s_instance = 0;
 
-    TaskOrchestrator& TaskOrchestrator::instance()
+    template<typename DT, typename IT>
+    ACE_Thread_Mutex TaskOrchestrator<DT, IT>::s_creationLock;
+
+    template<typename DT, typename IT>
+    TaskOrchestrator<DT, IT>& TaskOrchestrator<DT, IT>::instance()
     {
         if (s_instance == 0)
         {
@@ -22,128 +26,135 @@ namespace Manager
         return *s_instance;
     }
 
-    TaskOrchestrator::TaskOrchestrator() : m_objectPool (0), m_initialized (false)
+    template<typename DT, typename IT>
+    void TaskOrchestrator<DT, IT>::registerTask (ConfigurableTask<DT, IT>* task)
     {
-    }
-
-    TaskOrchestrator::~TaskOrchestrator()
-    {
-        stopAll();
-        // Note: Do not delete tasks here - ownership is with caller or explicit cleanup
-    }
-
-    void TaskOrchestrator::initialize (int maxThreads, ObjectPool<std::vector<ObjectData> >& objectPool)
-    {
-        if (m_initialized) return;
-
-        m_numThreads = maxThreads;
-
-        m_objectPool = &objectPool;
-
-        m_selectedTier = SystemCapabilities::AnalyzeTopologyAndPermissions (m_hardwarePool);
-        m_initialized = true;
-
-        if (m_hardwarePool.size() < maxThreads)
+        if (!task)
         {
-            ACE_DEBUG ((LM_INFO, ACE_TEXT ("Found less than %i cores available, setting thread count to %i\n"), 
-                        maxThreads,
-                        m_hardwarePool.size())
+            ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::registerTask task is NULL, aborting\n"))
                       );
-
-            m_numThreads = m_hardwarePool.size();
+            return;
         }
-
-        // 2. VERBOSE LOGGING FOR ENTERPRISE ENVIRONMENT MANAGEMENT
-        std::string tierName;
-
-        switch (m_selectedTier)
-        {
-            case SchedulingTier::RealTimeAndAffinity:
-                tierName = "Tier 1: [REAL-TIME SCHED_FIFO + INTUITIVE HARDWARE CORE PINNING]";
-                break;
-
-            case SchedulingTier::AffinityOnly:
-                tierName = "Tier 2: [STANDARD SCHEDULER TIMESHARING + INTUITIVE HARDWARE CORE PINNING]";
-                break;
-
-            case SchedulingTier::StandardFallback:
-                tierName = "Tier 3: [STANDARD FALLBACK - SINGLE CORE OR OS CONTEXT ACCESS BLOCKED]";
-                break;
-        }
-
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("System Initialization: Selected Operating Framework: %s\n"), tierName.c_str()));
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("Detected Total Hardware Units: %i available processing paths.\n"), m_numThreads));
-
-        // Inside EntityManager::startSimulation() right after parsing topology
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("HETEROGENEOUS POOL MAPPING SUMMARY:\n")));
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("  -> Main Thread: Reserved exclusively for Core 0\n")));
-
-        size_t physicalCount = 0;
-        size_t siblingCount  = 0;
-
-        for (std::vector<HardwareCore>::const_iterator it = m_hardwarePool.begin(); it != m_hardwarePool.end(); ++it)
-        {
-            const HardwareCore& core = *it;
-
-            if (core.isHTSibling) siblingCount++;
-            else physicalCount++;
-        }
-
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("  -> Pool 1: %i Physical Cores allocated (Cores 1-15)\n"), physicalCount - 1));
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("  -> Pool 2: %i Sibling Cores allocated (Cores 17-31)\n"), siblingCount - 1));
-
-        //// 3. SYNCHRONIZE BARRIER LIFECYCLE HANDSHAKE
-        //m_barrier = new ACE_Barrier (m_numThreads + 1);
-        
-        //// Launch threads as dedicated kernel-level entities (THR_BOUND)
-        //this->activate (THR_NEW_LWP | THR_JOINABLE | THR_BOUND, m_numThreads);
-        
-        //m_barrier->wait();
-        //ACE_DEBUG ((LM_INFO, ACE_TEXT ("All %1 Primary threads pinned, scaled, and synchronized.").arg (m_numThreads));
-
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] TaskOrchestrator initialized with maxThreads=%d\n"), m_numThreads));
-    }
-
-
-    void TaskOrchestrator::registerTask (ConfigurableTask<ObjectData>* task)
-    {
-        if (!task) return;
 
         m_tasks.push_back (task);
     }
 
-    void TaskOrchestrator::startAll()
+    template<typename DT, typename IT>
+    void TaskOrchestrator<DT, IT>::runProducer (std::string name, void* args)
     {
-        ACE_DEBUG((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Starting %d registered tasks...\n"), (int)m_tasks.size()));
+        if (m_producerStarted)
+        {
+            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t] open() failed,%s task already running\n"), 
+                        name.c_str())
+                      );
+            return;
+        }
+
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Starting registered Producer task %s\n"), name.c_str()));
 
         for (size_t i = 0; i < m_tasks.size(); ++i)
         {
-            if (m_tasks[i])
+            if (m_producerStarted)
             {
-                ACE_DEBUG((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Opening task: %s\n"), m_tasks[i]->getConfig().name.c_str()));
-                int ret = m_tasks[i]->open (0);
-                ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] open() returned %d for %s\n"), 
-                           ret, m_tasks[i]->getConfig().name.c_str()));
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Producer task %s already started\n"), name.c_str()));
+                return;
+            }
+
+            if (m_tasks[i]->getConfig().name == name)
+            {
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Task %s found\n"), name.c_str()));
+
+                if (m_tasks[i]->getConfig().role == TaskRole::ROLE_PRODUCER)
+                {
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Opening task: %s\n"), name.c_str()));
+                    int ret = m_tasks[i]->open (args);
+
+                    if (ret < 0)
+                    {
+                        ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t] open() failed and returned %d for %s\n"), 
+                                    ret, name.c_str())
+                                  );
+                    }
+                    else
+                    {
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Producer task %s started\n"), name.c_str()));
+                        m_producerStarted = true;
+                    }
+                }
+                else
+                {
+                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: Task: %s not registered as a Producer\n"), name.c_str()));
+                }
             }
         }
 
-        // === CRITICAL: Release all barriers ===
-        ACE_DEBUG((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Releasing all task barriers...\n")));
+        if (!m_producerStarted)
+        {
+            ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Producer task %s not found or not started\n"), name.c_str()));
+        }
+    }
+
+    template<typename DT, typename IT>
+    void TaskOrchestrator<DT, IT>::runConsumer (std::string name, void* args)
+    {
+        if (m_consumerStarted)
+        {
+            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t] open() failed,%s task already running\n"), 
+                        name.c_str())
+                      );
+            return;
+        }
+
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t] Starting registered Consumer task %s\n"), name.c_str()));
+
+        for (size_t i = 0; i < m_tasks.size(); ++i)
+        {
+            if (m_consumerStarted)
+            {
+                return;
+            }
+
+            if ((m_tasks[i]->getConfig().name == name) && (m_tasks[i]->getConfig().role == TaskRole::ROLE_CONSUMER))
+            {
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Opening task: %s\n"), name.c_str()));
+                int ret = m_tasks[i]->open (args);
+
+                if (ret < 0)
+                {
+                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t] open() failed and returned %d for %s\n"), 
+                                ret, name.c_str())
+                              );
+                }
+                else
+                {
+                    m_consumerStarted = true;
+                    return;
+                }
+            }
+        }
+    }
+
+    template<typename DT, typename IT>
+    void TaskOrchestrator<DT, IT>::startAll()
+    {
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t] Starting %d registered tasks...\n"), (int)m_tasks.size()));
 
         for (size_t i = 0; i < m_tasks.size(); ++i)
         {
             if (m_tasks[i])
             {
-                // Each task has its own barrier; we need to signal them
-                // (The +1 in barrier count was waiting for this main thread signal)
-                m_tasks[i]->m_barrier->wait();   // Release the workers
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Opening task: %s\n"), m_tasks[i]->getConfig().name.c_str()));
+                int ret = m_tasks[i]->open (0);
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] open() returned %d for %s\n"), 
+                           ret, m_tasks[i]->getConfig().name.c_str()));
             }
         }
 
         ACE_DEBUG((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] All task barriers released - workers should now run.\n")));
     }
 
-    void TaskOrchestrator::stopAll()
+    template<typename DT, typename IT>
+    void TaskOrchestrator<DT, IT>::stopAll()
     {
         ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Stopping all tasks...\n")));
 
@@ -166,8 +177,12 @@ namespace Manager
         ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] All tasks stopped and cleaned up.\n")));
     }
 
-    ObjectPool<std::vector<ObjectData> >& TaskOrchestrator::getObjectPool()
+    template<typename DT, typename IT>
+    ObjectPool<std::vector<DT> >* TaskOrchestrator<DT, IT>::getObjectPool()
     {
-        return *m_objectPool;
+        return &m_objectPool;
     }
 } // namespace Manager
+
+// Explicit template instantiation for the types used in the application
+template class Manager::TaskOrchestrator<Manager::ObjectData, Manager::TestData>;

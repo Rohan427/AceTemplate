@@ -23,6 +23,8 @@ class Config : public configuration::Configuration
         int MAX_THREADS;
         uint64_t MAX_FPU_THREADS = 32;
         int MAX_OBJECTS = 500000; //Fallback for bad configuration files
+        int UPDATE_INTERVAL = 2;
+        int VALID_LEVEL = 10;
 
 
         struct ConfigErr
@@ -60,6 +62,8 @@ class Config : public configuration::Configuration
         int getMaxThreads(); // The maximum number of threads allocated to the application
         int getMaxObjects();
         uint64_t getMaxFpuThreads();
+        int getLevel();
+        int getDataUpdateInterval();
 
         //bool isCurrent();
         //time_t getLastReadTime();

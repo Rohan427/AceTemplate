@@ -1,4 +1,5 @@
 #include "ConfigurableTask.hxx"
+#include "DataProcessor.hxx"
 #include "TaskOrchestrator.hxx"
 #include "Compatibility.hxx"
 #include "Config.hxx"
@@ -10,79 +11,37 @@
 
 namespace Manager
 {
-    template<typename ObjectData>  
-    ACE_Thread_Mutex ConfigurableTask<ObjectData>::m_sharedVectorLock;
-
-    template<typename DataT>
-    ConfigurableTask<DataT>::ConfigurableTask (const TaskConfig& cfg, ObjectPool<std::vector<DataT> >& pool)
-        : m_config (cfg),
-          m_pool (pool),
-          m_barrier (0),
-          m_done (false),
-          m_threadIndexer (0),
-          m_hardwareCorePool (TaskOrchestrator::instance().getHardwarePool()),
-          m_selectedTier (TaskOrchestrator::instance().getSchedulingTier()),
-          m_bufferA (0),
-          m_bufferB (0),
-          m_activeWriteBuffer (0)
+    template<typename DataT, typename InputT>
+    int ConfigurableTask<DataT, InputT>::open (void* args)
     {
-        m_bufferA = m_pool.acquire();
-        m_bufferB = m_pool.acquire();
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: ConfigurableTask<DataT>::open on %s\n"), m_config.name.c_str()));
 
-        if (m_bufferA)
-        {
-            m_activeWriteBuffer = m_bufferA;
-        }
+        m_tier = m_config.tier;
+        m_barrier = new ACE_Barrier (m_config.numThreads);
+        return this->activate (THR_NEW_LWP | THR_JOINABLE | THR_BOUND, m_config.numThreads);
     }
 
-    template<typename DataT>
-    ConfigurableTask<DataT>::~ConfigurableTask()
+    template<typename DataT, typename InputT>
+    int ConfigurableTask<DataT, InputT>::close (u_long flags)
     {
-        if (m_barrier)
-        {
-            delete m_barrier;
-            m_barrier = 0;
-        }
-    }
-
-    template<typename DataT>
-    int ConfigurableTask<DataT>::open (void* /*args*/)
-    {
-//        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] open() called for %s - activating %d threads\n"),
-//                   m_config.name.c_str(), m_config.numChildThreads));
-
-        m_barrier = new ACE_Barrier (m_config.numChildThreads + 1);
-        int ret = this->activate (THR_NEW_LWP | THR_JOINABLE | THR_BOUND, m_config.numChildThreads);
-
-//        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] activate() returned %d for %s\n"), ret, m_config.name.c_str()));
-
-        return ret;
-    }
-
-
-    template<typename DataT>
-    int ConfigurableTask<DataT>::close (u_long /*flags*/)
-    {
-        // Cleanup if needed
+        stop();
         return 0;
     }
 
 
-    template<typename DataT>
-    int ConfigurableTask<DataT>::svc()
+    template<typename DataT, typename InputT>
+    int ConfigurableTask<DataT, InputT>::svc()
     {
-//        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] === svc() ENTERED for %s (isProducer=%d) ===\n"),
-//                   m_config.name.c_str(), (int)m_config.isProducer));
+//        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] === svc() ENTERED for %s (isProducer=%d) ===\n"), m_config.name.c_str(), m_config.role));
 
         m_barrier->wait();
 
-//        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Barrier passed - starting work loop for %s\n"),
-//                   m_config.name.c_str()));
+//        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Barrier passed - starting work loop for %s\n"), m_config.name.c_str()));
 
         int localThreadId = m_threadIndexer++;
-        localThreadId = localThreadId % m_config.numChildThreads;
+        localThreadId = localThreadId % m_config.numThreads;
 
-        // === Core Pinning + Priority (adapted from your TaskManager) ===
+        // === Core Pinning + Priority (adapted from TaskManager) ===
         ACE_thread_t nativeThreadHandle = ACE_OS::thr_self();
 
         size_t availableCores = m_hardwareCorePool.size();
@@ -90,7 +49,7 @@ namespace Manager
         // =========================================================================
         // STEP 1: HETEROGENEOUS TOPOLOGY WORKLOAD PARTITIONING
         // =========================================================================
-        if (m_selectedTier != SchedulingTier::StandardFallback && availableCores > 0)
+        if (m_tier != SchedulingTier::StandardFallback && availableCores > 0)
         {
             try
             {
@@ -99,7 +58,7 @@ namespace Manager
 
                 // Dynamically assign thread types based on the application lifecycle allocation
                 // Example: Split pool so higher index blocks handle trajectory predictions
-                if (localThreadId >= (m_config.numChildThreads / 2))
+                if (localThreadId >= (m_config.numThreads / 2))
                 {
                     myWorkload = WorkloadType::SIBLING_WORKER;
                 }
@@ -147,7 +106,7 @@ namespace Manager
                 // =========================================================================
                 // STEP 2: REAL-TIME ESCALATION & SCHEDULER TUNING
                 // =========================================================================
-                if (m_selectedTier == SchedulingTier::RealTimeAndAffinity)
+                if (m_tier == SchedulingTier::RealTimeAndAffinity)
                 {
                     struct sched_param param;
                     
@@ -188,7 +147,7 @@ namespace Manager
         }
 
         // Low-priority producer adjustment
-        if (m_config.isProducer)
+        if (m_config.role == ROLE_PRODUCER)
         {
         // Force lower niceness / priority
 #if defined(__linux__)
@@ -203,73 +162,86 @@ namespace Manager
 
         while (!m_done)
         {
-            // Producer periodic sleep with early exit check
-            if (m_config.intervalMs > 0 && m_config.isProducer)
+//             ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: %s in svc() while loop.\n"), m_config.name.c_str()));
+
+            std::vector<InputT>* currentPtr = m_orchestrator->getSharedDataPtr().value();
+
+            if (m_config.role == ROLE_PRODUCER)
             {
-                // Break sleep into smaller chunks to respond faster to shutdown
-                unsigned long remaining = m_config.intervalMs;
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i.\n"), localThreadId));
 
-                while (remaining > 0 && !m_done)
+                if (currentPtr)
                 {
-                    unsigned long slice = (remaining > 1000) ? 1000 : remaining;  // 1 second slices
-                    ACE_OS::sleep (ACE_Time_Value (0, slice * 1000));
-                    remaining -= slice;
+                    if (ACE_OS::gettimeofday() >= m_orchestrator->m_nextRun)
+                    {
+                        processWorkload (localThreadId, currentPtr);
+                        bool useful = !m_orchestrator->m_activeWriteBuffer->empty();
+//                        m_orchestrator->markAndSwap (useful);
+                        m_orchestrator->m_nextRun = ACE_OS::gettimeofday() + ACE_Time_Value (0, m_config.producerIntervalMs * 1000);
+                    }
                 }
-
-                if (m_done) break;
+                else
+                {
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i m_sharedDataPtr is NULL\n"), localThreadId));
+                }
             }
-
-            if (m_sharedVectorLock.tryacquire() == 0)
+            else if (m_config.role == ROLE_CONSUMER)
             {
-                processWorkload (localThreadId, *m_activeWriteBuffer);
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Consumer %i.\n"), localThreadId));
 
-                if (m_config.isProducer)
+                ACE_Guard<ACE_Thread_Mutex> guard (m_orchestrator->m_bufferLock);
+
+                if (m_orchestrator->m_activeReadState->valid)
                 {
-                    swapBuffers();
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Consumer %i m_activeReadState is valid.\n"), localThreadId));
+
+                    if (currentPtr)
+                    {
+                        processWorkload (localThreadId, currentPtr);
+
+                        notifyConsumerDone();
+                    }
+                    else
+                    {
+                        ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: Consumer %i currentPtr NOT valid.\n"), localThreadId));
+                    }
                 }
-
-                m_sharedVectorLock.release();
-
-                ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s Worker %d completed work\n"),
-                           m_config.isProducer ? "Producer" : "Consumer", localThreadId));
+                else
+                {
+                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: Consumer %i m_activeReadState NOT valid.\n"), localThreadId));
+                }
             }
             else
             {
-                ACE_Thread::yield();
+                ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: No role detected for thread %i.\n"), localThreadId));
             }
 
-            // Consumer light sleep
-            if (!m_config.isProducer)
-            {
-                int sleepUs = ::Config::getInstance().THREAD_SLEEP_TIME > 0 
-                            ? ::Config::getInstance().THREAD_SLEEP_TIME : 10000;
-                ACE_OS::sleep(ACE_Time_Value(0, sleepUs));
-            }
+            ACE_OS::sleep (ACE_Time_Value (0, ::Config::getInstance().THREAD_SLEEP_TIME)); // 5ms yield
         }
 
-        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] %s Thread %d exiting cleanly\n"),
-                   m_config.isProducer ? "Producer" : "Consumer", localThreadId));
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s Thread %d exiting cleanly\n"),
+                   m_config.role ? ROLE_PRODUCER : ROLE_CONSUMER, localThreadId));
 
         return 0;
     }
 
 
-    template<typename DataT>
-    void ConfigurableTask<DataT>::stop()
+    template<typename DataT, typename InputT>
+    void ConfigurableTask<DataT, InputT>::stop()
     {
         m_done = true;
         this->msg_queue()->deactivate();
 
         // Optional immediate affinity reset for this task's threads
-        if (m_selectedTier == SchedulingTier::RealTimeAndAffinity)
+        if (m_tier == SchedulingTier::RealTimeAndAffinity)
         {
             resetCoreAffinityOnShutdown();
         }
     }
 
 
-    template<typename DataT>
-    void ConfigurableTask<DataT>::resetCoreAffinityOnShutdown()
+    template<typename DataT, typename InputT>
+    void ConfigurableTask<DataT, InputT>::resetCoreAffinityOnShutdown()
     {
         long totalCores = ::sysconf (_SC_NPROCESSORS_ONLN);
         cpu_set_t fullSystemMask;
@@ -290,35 +262,41 @@ namespace Manager
         ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] Core affinity reset to full system pool\n")));
     }
 
-    template<typename DataT>
-    void ConfigurableTask<DataT>::swapBuffers()
+    template<typename DataT, typename InputT>
+    std::vector<DataT>* ConfigurableTask<DataT, InputT>::getReadBuffer()
     {
-        ACE_Guard<ACE_Thread_Mutex> guard (m_bufferLock);
-        m_activeWriteBuffer = (m_activeWriteBuffer == m_bufferA) ? m_bufferB : m_bufferA;
+        ACE_Guard<ACE_Thread_Mutex> guard (m_orchestrator->m_bufferLock);
+        return (m_orchestrator->m_activeWriteBuffer == m_orchestrator->m_bufferA) ? m_orchestrator->m_bufferB : m_orchestrator->m_bufferA;
     }
 
-    template<typename DataT>
-    std::vector<DataT>* ConfigurableTask<DataT>::getReadBuffer()
+    template<typename DataT, typename InputT>
+    void ConfigurableTask<DataT, InputT>::triggerProducer()
     {
-        ACE_Guard<ACE_Thread_Mutex> guard (m_bufferLock);
-        return (m_activeWriteBuffer == m_bufferA) ? m_bufferB : m_bufferA;
+        // Force immediate execution
+        m_orchestrator->m_nextRun = ACE_OS::gettimeofday() - ACE_Time_Value (0, 1000000);  // 1 second in the past
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Producer triggered for immediate run\n")));
     }
 
-    template<typename DataT>
-    void ConfigurableTask<DataT>::triggerUpdate()
+    template<typename DataT, typename InputT>
+    void ConfigurableTask<DataT, InputT>::triggerConsumer()
     {
-        if (!m_config.isProducer) return;
-        // Wake producer if sleeping
-        this->msg_queue()->pulse();
+        m_orchestrator->m_notifyCond.broadcast();
     }
 
-    // Static shared lock definition (must match the template instantiation)
-//    template<typename ObjectData> 
-//    ACE_Thread_Mutex ConfigurableTask<ObjectData>::m_sharedVectorLock;
+    template<typename DataT, typename InputT>
+    void ConfigurableTask<DataT, InputT>::notifyConsumerDone()
+    {
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: ConfigurableTask<DataT>::notifyConsumerDone\n")));
 
-// Close the explicit definition block
+        if (m_orchestrator)
+        {
+            ACE_Guard<ACE_Thread_Mutex> guard (m_orchestrator->getAcceptLock());  // May need friend or public setter
+            m_orchestrator->setConsumerFinished (true);
+            m_orchestrator->getConsumerCond().broadcast();
+        }
+    }
 } // namespace Manager
 
 // ====================== FULL TEMPLATE INSTANTIATION ======================
 // This forces generation of all member functions (constructor, svc, getReadBuffer, etc.)
-template class Manager::ConfigurableTask<Manager::ObjectData>;
+template class Manager::ConfigurableTask<Manager::ObjectData, Manager::TestData>;

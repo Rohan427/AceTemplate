@@ -2,76 +2,103 @@
 #ifndef CONFIGURABLETASK_HXX
 #define CONFIGURABLETASK_HXX
 
-#include "ObjectPool.hxx"
+#include "TaskOrchestrator.hxx"
+#include "SystemCapabilities.hxx"
 #include "ObjectData.hxx"
+#include "ObjectPool.hxx"
 #include <ace/Task.h>
 #include <ace/Barrier.h>
-#include "ace/Thread.h"
-#include "SystemCapabilities.hxx"
 #include <vector>
-#include <string>
 
 namespace Manager
 {
+    template<typename DataT, typename InputT>
+    class TaskOrchestrator;
+
+    class DataProcessor;
+
+    enum TaskRole { ROLE_PRODUCER, ROLE_CONSUMER };
+
     struct TaskConfig
     {
-        std::string name;
-        int numChildThreads;      // Number of worker threads to spawn
-        int basePriority;         // 1-99 (SCHED_FIFO) or niceness delta
+        int numThreads;
+        int basePriority;
         WorkloadType workloadType;
-        bool useRealTime;         // Attempt SCHED_FIFO if permitted
-        unsigned long intervalMs; // 0 = on-demand, else periodic (e.g. 120000)
-        bool isProducer;          // true = writes + swaps, false = read-only
+        bool useRealTime;
+        unsigned long intervalMs;
+        std::string name;
+        TaskRole role;
+        unsigned long producerIntervalMs;
+        SchedulingTier tier;
     };
 
-    template<typename DataT>
+    template<typename DataT, typename InputT>
     class ConfigurableTask : public ACE_Task<ACE_MT_SYNCH>
     {
         public:
-            ConfigurableTask (const TaskConfig& cfg, ObjectPool<std::vector<DataT> >& pool);
-            virtual ~ConfigurableTask();
-
             virtual int open (void* args = 0);
             virtual int svc();
             virtual int close (u_long flags = 0);
 
-            // Consumer API (high-priority, blocking)
+            void stop();
+            void triggerProducer();
+            void triggerConsumer();
+            void notifyConsumerDone();
+
+            void markAndSwap (bool isUseful);
             std::vector<DataT>* getReadBuffer();
+            BufferState getBufferState() const;
+
+            void resetCoreAffinityOnShutdown();
 
             TaskConfig getConfig()
             {
                 return m_config;
             }
 
-            // Producer API
-            void triggerUpdate();     // For manual trigger if needed
-            void swapBuffers();       // Called after producer work
-
-            virtual void stop();
-
         protected:
-            virtual void processWorkload (int threadId, std::vector<DataT>& buffer) = 0;
+            virtual void processWorkload (int threadId, void* arg) = 0;
+
+            ACE_Barrier* getBarrier()
+            {
+                return m_barrier;
+            }
+
+            TaskOrchestrator<DataT, InputT>* m_orchestrator;
 
         private:
             TaskConfig m_config;
-            ObjectPool<std::vector<DataT>> &m_pool;
-            bool m_done;
-            AtomicInt m_threadIndexer;
-            const std::vector<HardwareCore> &m_hardwareCorePool;
-            ::SchedulingTier m_selectedTier;
+ //           ObjectPool<std::vector<DataT> >& m_pool;
 
-            // Double buffer
-            std::vector<DataT>* m_bufferA;
-            std::vector<DataT>* m_bufferB;
-            std::vector<DataT>* m_activeWriteBuffer;
-            ACE_Thread_Mutex m_bufferLock;
-
-            void resetCoreAffinityOnShutdown();   // Called 
-
-        public:
-            static ACE_Thread_Mutex m_sharedVectorLock;
             ACE_Barrier* m_barrier;
+            bool m_done;
+            std::atomic<int> m_threadIndexer;
+            std::vector<HardwareCore> m_hardwareCorePool;
+            SchedulingTier m_tier;
+
+            // Necessary templte function definitions
+        public:
+            ConfigurableTask (const TaskConfig& cfg, TaskOrchestrator<DataT, InputT>* orchestrator)
+                : m_config (cfg)
+                , m_orchestrator (orchestrator)
+                , m_barrier (0)
+                , m_done (false)
+                , m_threadIndexer (0)
+            {
+            }
+
+            ~ConfigurableTask()
+            {
+                stop();
+
+                if (m_barrier)
+                {
+                    delete m_barrier;
+                    m_barrier = 0;
+                }
+            }
     };
+
 } // namespace Manager
 
 #endif // CONFIGURABLETASK_HXX

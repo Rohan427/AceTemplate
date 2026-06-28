@@ -26,4 +26,18 @@
     typedef std::atomic<int> AtomicInt;
 #endif
 
-#endif
+// Manual Singleton for ACE compatibility across versions
+#define DECLARE_SINGLETON(ClassName) \
+public: \
+    static ClassName* instance() { \
+        static ClassName* theInstance = 0; \
+        if (theInstance == 0) { \
+            theInstance = new ClassName(); \
+        } \
+        return theInstance; \
+    } \
+private: \
+    ClassName(); \
+    ~ClassName();
+
+#endif // COMPATIBILITY_HXX

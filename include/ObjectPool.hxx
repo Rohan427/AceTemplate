@@ -14,9 +14,8 @@ namespace Manager
     class ObjectPool
     {
         public:
-            explicit ObjectPool (size_t capacity)
-                : m_allocator (capacity)
-                , m_capacity (capacity)
+            explicit ObjectPool (size_t capacity) : m_allocator (capacity),
+                                                    m_capacity (capacity)
             {
                 m_freeList.reserve (capacity);
             }
@@ -28,21 +27,22 @@ namespace Manager
 
             T* acquire()
             {
-                void* mem = m_allocator.malloc();
+                T* obj = static_cast<T*> (m_allocator.malloc());
 
-                if (mem)
+                if (obj)
                 {
-                    T* obj = new (mem) T();   // placement new
+                    new (obj) T();
                     m_freeList.push_back (obj);
                     return obj;
                 }
 
-                return 0;
+                return nullptr;  // Signals "pool exhausted"
             }
 
-            void release(T* obj)
+            void release (T* obj)
             {
                 if (!obj) return;
+
                 obj->~T();
                 m_allocator.free (obj);
             }
@@ -58,6 +58,7 @@ namespace Manager
                 {
                     if (m_freeList[i]) m_freeList[i]->~T();
                 }
+
                 m_freeList.clear();
             }
 

@@ -1,73 +1,42 @@
 #include "Config.hxx"
 #include "TaskOrchestrator.hxx"
+#include "DataProcessor.hxx"
 #include "ObjectPool.hxx"
 #include "ObjectData.hxx"
 #include <ace/Log_Msg.h>
 #include <iostream>
 #include <iomanip>
+#include <cstdlib>
 
-#define DEBUG false
+#define DEBUG true
 
 using namespace Manager;
 
-class TestProducerTask : public ConfigurableTask<ObjectData>
+
+
+float generateFloat (float min, float max)
 {
-    public:
-        TestProducerTask (const TaskConfig& cfg, ObjectPool<std::vector<ObjectData> >& pool)
-            : ConfigurableTask<ObjectData>(cfg, pool)
-        { 
-//            ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Producer"));
-        }
+    double scaled = static_cast<double> (std::rand()) / RAND_MAX;
+    return min + static_cast<float> (scaled * (max - min + 1));
+}
 
-    protected:
-        virtual void processWorkload (int threadId, std::vector<ObjectData>& buffer)
-        {
-//            ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] Hello from Producer Worker %d - Updating buffer (size=%d)\n"),
-//                       threadId, (int)buffer.size()));
-
-            // Simulate work
-            buffer.resize (10);  // Minimal test data
-
-            for (size_t i = 0; i < buffer.size(); ++i)
-            {
-                buffer[i].x = (float)threadId;
-                buffer[i].y = (float)i;
-                buffer[i].z = 42.0f;
-            }
-
-            swapBuffers();   // Signal swap
-        }
-};
-
-class TestConsumerTask : public ConfigurableTask<ObjectData>
+float generateInt (int min, int max)
 {
-    public:
-        TestConsumerTask (const TaskConfig& cfg, ObjectPool<std::vector<ObjectData> >& pool)
-            : ConfigurableTask<ObjectData>(cfg, pool)
-        {
-            //ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Consumer"));
-        }
-
-    protected:
-        virtual void processWorkload (int threadId, std::vector<ObjectData>& buffer)
-        {
-//            ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Hello from Consumer Worker %d - Reading buffer (size=%d)\n"),
-//                       threadId, (int)buffer.size()));
-        }
-};
+    double scaled = static_cast<double> (std::rand()) / RAND_MAX;
+    return min + static_cast<int> (scaled * (max - min + 1));
+}
 
 //int main (int argc, char *argv[])
 int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 {
     // Set ACE to show: Time | Severity | Thread ID | Message
     ACE_Log_Msg::instance()->open (argv[0], ACE_Log_Msg::STDERR); // | ACE_Log_Msg::LOGGER);
-    ACE_Log_Msg::instance()->priority_mask (LM_DEBUG |  LM_INFO | LM_ERROR | LM_CRITICAL, ACE_Log_Msg::PROCESS);
+    ACE_Log_Msg::instance()->priority_mask (LM_DEBUG |  LM_INFO | LM_ERROR | LM_CRITICAL | LM_WARNING, ACE_Log_Msg::PROCESS);
 
     ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Starting up"));
 
     // 1. Config + Pool
-    ::Config::getInstance().init("configuration.json");
-    ObjectPool<std::vector<ObjectData> > objectPool(1000);   // Small test size
+    ::Config::getInstance().init ("configuration.json");
 
 #if DEBUG
     std::cout << "THREAD_SLEEP_TIME " << std::fixed << std::setprecision (5) << ::Config::getInstance().THREAD_SLEEP_TIME << std::endl;
@@ -76,36 +45,71 @@ int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
     std::cout << "MAX_OBJECTS " << std::fixed << std::setprecision (5) << ::Config::getInstance().MAX_OBJECTS << std::endl;
 #endif
 
-    // 2. Orchestrator
-    TaskOrchestrator::instance().initialize (8, objectPool);
+    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Initializing DataProcessor"));
 
-    // 3. Create Producer (low priority, periodic ~5s for testing)
-    // Producer: Low priority, runs every 5 seconds for testing (change to 120000 later)
-    TaskConfig prodCfg = {"DataUpdater", 16, 10 /*low pri*/, WorkloadType::PRIMARY_WORKER, true, 5000, true};
-    TestProducerTask* producer = TaskOrchestrator::instance().createAndRegisterTask<TestProducerTask> (prodCfg);
+    DataProcessor::instance()->initialize (::Config::getInstance().getMaxObjects());
 
-    // 4. Create Consumer (high priority, on-demand)
-    // Consumer: High priority, on-demand style with light sleep
-    TaskConfig consCfg = {"TestConsumer", 4, 60, WorkloadType::SIBLING_WORKER, true, 0, false};
-    TestConsumerTask* consumer = TaskOrchestrator::instance().createAndRegisterTask<TestConsumerTask> (consCfg);
+    // Test cycle
+    std::vector<TestData> testData;
+    int numObjects =  generateInt (100, 1000);
 
-    // 5. Start everything
-    TaskOrchestrator::instance().startAll();
+    ACE_DEBUG ((LM_INFO, ACE_TEXT ("Creating testData with %i objects.\n"), numObjects));
 
-    // 6. Simulate high-frequency consumer calls from main thread
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i< numObjects; i++)
     {
-        ACE_OS::sleep (ACE_Time_Value (2));  // 2 second intervals
-
-        std::vector<ObjectData>* stable = consumer->getReadBuffer();
-        ACE_DEBUG((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] Main thread: Consumer read buffer OK - size=%d\n"),
-                   stable ? (int)stable->size() : 0));
+        testData.push_back (TestData (i,
+                                      generateFloat (0, 100),
+                                      generateFloat (0, 1000),
+                                      generateFloat (0, 1000),
+                                      generateFloat (0, 1000)
+                                     )
+                           );
     }
 
-    ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Test complete. Shutting down...\n")));
+    DataProcessor::instance()->acceptData (&testData);
 
-    TaskOrchestrator::instance().stopAll();
+    int total = 4;
+    int count = 0;
 
-    ACE_DEBUG((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Shutdown successful. Buffers safely managed.\n")));
+    while (count < total)
+    {
+        // Sleep for 2 seconds and 500 milliseconds
+        ACE_Time_Value sleep_duration (2, 500000); 
+
+        // ACE_OS::sleep takes an ACE_Time_Value reference
+        if (ACE_OS::sleep (sleep_duration) == -1)
+        {
+            // Handle interruption (returns -1 if interrupted by a signal)
+            ACE_DEBUG ((LM_ERROR, ACE_TEXT ("Sleep was interrupted.\n")));
+        }
+        else
+        {
+            numObjects = generateInt (100, 1000);
+            testData.clear();
+
+            ACE_DEBUG ((LM_INFO, ACE_TEXT ("Creating testData with %i objects.\n"), numObjects));
+
+            for (int i = 0; i< numObjects; i++)
+            {
+                testData.push_back (TestData (i,
+                                              generateFloat (0, 100),
+                                              generateFloat (0, 1000),
+                                              generateFloat (0, 1000),
+                                              generateFloat (0, 1000)
+                                             )
+                                   );
+            }
+
+            DataProcessor::instance()->acceptData (&testData);
+        }
+
+        count++;
+    }
+
+    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Test cycle complete"));
+
+    // Later: shutdown on exit
+//    DataProcessor::instance()->shutdown();
+
     return 0;
 }

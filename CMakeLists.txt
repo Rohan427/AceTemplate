@@ -78,6 +78,7 @@ set (HEADER_ROOT ${CMAKE_SOURCE_DIR}/include)
 # ==================== Source Files ====================
 set (SOURCES
      ${SOURCE_ROOT}/Config.cxx
+     ${SOURCE_ROOT}/DataProcessor.cxx
      ${SOURCE_ROOT}/ConfigurableTask.cxx     # NEW
      ${SOURCE_ROOT}/TaskOrchestrator.cxx     # NEW
      ${SOURCE_ROOT}/Main.cxx
@@ -86,6 +87,8 @@ set (SOURCES
 
 set (HEADERS
     ${HEADER_ROOT}/Compatibility.hxx
+    ${HEADER_ROOT}/TestTasks.hxx
+    ${HEADER_ROOT}/DataProcessor.hxx
     ${HEADER_ROOT}/ConfigurableTask.hxx
     ${HEADER_ROOT}/TaskOrchestrator.hxx
     ${HEADER_ROOT}/ObjectPool.hxx
