@@ -8,6 +8,7 @@ namespace Manager
 {
     DataProcessor::DataProcessor() : m_sharedDataPtr (nullptr)
     {
+        m_orchestrator = &TaskOrchestrator<ObjectData, TestData>::instance();
     }
 
     void DataProcessor::initialize (size_t poolCapacity)
@@ -40,26 +41,9 @@ namespace Manager
 
         ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::initialize tasks with %i objects in buffers\n"), poolCapacity));
 
-        TaskOrchestrator<ObjectData, TestData>::instance().initialize (::Config::getInstance().getMaxThreads());
+        m_orchestrator->initialize (::Config::getInstance().getMaxThreads());
 
-        // 3. Create Producer (low priority, periodic ~5s for testing)
-        // Producer: Low priority, runs every 5 seconds for testing (change to 120000 later)
-        TaskOrchestrator<ObjectData, TestData>::instance().createProducer (prodCfg);
-
-        // 4. Create Consumer (high priority, on-demand)
-        // Consumer: High priority, on-demand style with light sleep
-//        m_consumer = TaskOrchestrator::instance().createAndRegisterTask<TestConsumerTask> (consCfg, m_pool, m_sharedDataPtr, this);
-
-//        m_producer = new TestProducerTask (prodCfg, m_pool, m_sharedDataPtr, this);
-//        m_consumer = new TestConsumerTask (consCfg, m_pool, m_sharedDataPtr, this);
-
-//        m_producer->open (0);
-//        m_consumer->open (0);
-
-//        if (!m_producer || !m_consumer)
-        {
-//            ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::initialize failed to initialize tasks\n")));
-        }
+        m_orchestrator->createProducer (prodCfg);
     }
 
     void DataProcessor::acceptData (std::vector<TestData>* dataPtr)
@@ -68,22 +52,7 @@ namespace Manager
 
         m_sharedDataPtr = dataPtr;
 
-        if (!TaskOrchestrator<ObjectData, TestData>::instance().isProducerStarted())
-        {
-            ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::acceptData Starting producer task\n")));
-            
-            TaskOrchestrator<ObjectData, TestData>::instance().runProducer ("DataProducer", 0);
-        }
-
-        //ACE_Guard<ACE_Thread_Mutex> guard (m_acceptLock);
-        //m_sharedDataPtr = dataPtr;
-
-        if (TaskOrchestrator<ObjectData, TestData>::instance().isProducerStarted())
-        {
-            ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer acceptData.\n")));
-            
-            TaskOrchestrator<ObjectData, TestData>::instance().updateSharedDataPtr (dataPtr);
-        }
+        m_orchestrator->runProducer ("DataProducer", dataPtr, 0);
 
         //if (m_consumer)
         //{

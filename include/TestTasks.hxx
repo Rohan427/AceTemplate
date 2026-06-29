@@ -12,6 +12,8 @@
 
 namespace Manager
 {
+    enum ProducerState { STOPPED, STARTED, RUNNING, FINISHED };
+
     struct TaskConfig;
 
     template<typename T>
@@ -38,17 +40,15 @@ namespace Manager
             {
                 // Heavy producer work - replace with your real logic
                 ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Producer processWorkload running\n")));
+
+                this->m_orchestrator->setProducerFinished (ProducerState::RUNNING);
                 // Example: copy or compute into buffer
 
                 std::vector<InputT>* input = static_cast<std::vector<InputT>*>(arg);
 
-//                if (buffer.size() < 100 && ConfigurableTask<DataT, InputT>::m_dataProcessor->m_sharedDataPtr.value())
-                {
-//                    buffer.resize (50);
-                    // Fill with data...
-
-                    TaskOrchestrator<DataT, InputT>::instance().markAndSwap (true);
-                }
+                this->m_orchestrator->markAndSwap (true);
+                this->m_orchestrator->m_nextRun = ACE_OS::gettimeofday() + ACE_Time_Value (0, this->m_config.producerIntervalMs * 1000);
+                this->m_orchestrator->setProducerFinished (ProducerState::STOPPED);
             }
     };
 
@@ -79,7 +79,7 @@ namespace Manager
                 //    }
                 //}
 
-                TaskOrchestrator<DataT, InputT>::instance().setConsumerFinished (true);
+                this->m_orchestrator->setConsumerFinished (true);
             }
         };
 } // namespace Manager

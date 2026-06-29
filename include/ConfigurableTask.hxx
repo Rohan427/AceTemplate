@@ -57,6 +57,7 @@ namespace Manager
             }
 
         protected:
+            TaskConfig m_config;
             virtual void processWorkload (int threadId, void* arg) = 0;
 
             ACE_Barrier* getBarrier()
@@ -67,7 +68,6 @@ namespace Manager
             TaskOrchestrator<DataT, InputT>* m_orchestrator;
 
         private:
-            TaskConfig m_config;
  //           ObjectPool<std::vector<DataT> >& m_pool;
 
             ACE_Barrier* m_barrier;

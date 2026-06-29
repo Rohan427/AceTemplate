@@ -146,32 +146,40 @@ namespace Manager
             {
                 if (m_producerStarted)
                 {
-                    ACE_DEBUG ((LM_WARNING, ACE_TEXT ("Producer already started\n")));
+                    ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::createProducer Producer already started\n")));
                     return;
                 }
 
                 TestProducerTask<DT, IT>* producer = new TestProducerTask<DT, IT> (cfg, this);
                 registerTask (producer);
-//                m_producer = producer;   // Optional internal pointer
 
-                ACE_DEBUG ((LM_INFO, ACE_TEXT ("Created and registered Producer task\n")));
+                ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::createProducer Created and registered Producer task\n")));
+
+                m_producerFinished = ProducerState::STOPPED;
             }
 
             void createConsumer (const TaskConfig &cfg)
             {
-                if (m_consumerStarted) return;
+                if (m_consumerStarted)
+                {
+                    ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::createConsumer Producer already started\n")));
+                    return;
+                }
 
                 TestConsumerTask<DT, IT>* consumer = new TestConsumerTask<DT, IT> (cfg, this);
                 registerTask (consumer);
 //                m_consumer = consumer; // Optional internal pointer
 
-                ACE_DEBUG ((LM_INFO, ACE_TEXT("Created and registered Consumer task\n")));
+                ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::createConsumer Created and registered Consumer task\n")));
             }
 
             void startAll();
             void stopAll();
-            void runProducer (std::string name, void* args);
-            void runConsumer (std::string name, void* args);
+            void runProducer (std::string name, void* data, void* args);
+            void runConsumer (std::string name, void* data, void* args);
+            bool isTimeForProducer() const;
+            bool hasValidData() const;
+            void waitForConsumerCompletion();
 
             // Access to shared pool
             ObjectPool<std::vector<DT>> *getObjectPool();
@@ -212,12 +220,29 @@ namespace Manager
                 m_consumerFinished = state;
             }
 
+            bool isConsumerFinished()
+            {
+                return m_consumerFinished;
+            }
+
+            void setProducerFinished (int state)
+            {
+                m_producerFinished = state;
+
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] setProducerFinished m_producerFinished set to %i\n"), m_producerFinished));
+            }
+
+            int isProducerFinished()
+            {
+                return m_producerFinished;
+            }
+
             ACE_Condition<ACE_Thread_Mutex>& getConsumerCond()
             {
                 return m_consumerDoneCond;
             }
 
-            bool isDataValid ()
+            bool isDataValid()
             {
                 return m_dataValid;
             }
@@ -237,7 +262,9 @@ namespace Manager
             {
                 ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: ConfigurableTask<DataT>::markAndSwap\n")));
 
-                ACE_Guard<ACE_Thread_Mutex> guard (m_bufferLock);
+//                ACE_Guard<ACE_Thread_Mutex> guard (m_bufferLock);
+                
+                setProducerFinished (ProducerState::FINISHED);
 
                 m_activeWriteState->valid = isUseful;
                 m_activeWriteState->version = ++m_versionCounter;
@@ -260,6 +287,10 @@ namespace Manager
                 }
 
                 m_dataValid = isUseful;
+
+                clearInputData();
+
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] markAndSwap m_producerFinished set to %i\n"), m_producerFinished));
             }
 
         private:
@@ -270,8 +301,6 @@ namespace Manager
             std::vector<ConfigurableTask<DT, IT>*> m_tasks;
             ObjectPool<std::vector<DT>> m_objectPool;
             bool m_initialized;
-            bool m_producerStarted;
-            bool m_consumerStarted;
             bool m_isValid;
 
             SchedulingTier m_selectedTier;
@@ -280,6 +309,9 @@ namespace Manager
 
             ACE_Thread_Mutex m_acceptLock;
             ACE_Condition<ACE_Thread_Mutex> m_consumerDoneCond;
+            bool m_producerStarted;
+            bool m_consumerStarted;
+            int m_producerFinished;
             bool m_consumerFinished;
             bool m_dataValid;
 
@@ -296,7 +328,8 @@ namespace Manager
                                  m_versionCounter (0),
                                  m_notifyCond (m_notifyLock),
                                  m_nextRun (ACE_OS::gettimeofday()),
-                                 m_consumerDoneCond (m_acceptLock)
+                                 m_consumerDoneCond (m_acceptLock),
+                                 m_producerFinished (ProducerState::STOPPED)
             {
                 // Acquire the two buffers from the pool
                 m_bufferA = m_objectPool.acquire();
@@ -328,6 +361,7 @@ namespace Manager
 
         protected:
             ACE_Atomic_Op<ACE_Thread_Mutex, std::vector<IT>*> m_sharedDataPtr;
+            std::vector<IT> m_currentInputData;
 
         public:
             void updateSharedDataPtr (std::vector<IT>* newPtr)
@@ -347,6 +381,16 @@ namespace Manager
             ACE_Atomic_Op<ACE_Thread_Mutex, std::vector<IT>*> getSharedDataPtr()
             {
                 return m_sharedDataPtr;
+            }
+
+            std::vector<IT> getInputData()
+            {
+                return m_currentInputData;
+            }
+
+            void clearInputData()
+            {
+                std::vector<IT>().swap (m_currentInputData); ;
             }
     };
 } // namespace Manager

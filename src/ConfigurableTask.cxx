@@ -170,19 +170,25 @@ namespace Manager
             {
                 ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i.\n"), localThreadId));
 
-                if (currentPtr)
+                if (m_orchestrator->isProducerFinished() <= ProducerState::STARTED)
                 {
-                    if (ACE_OS::gettimeofday() >= m_orchestrator->m_nextRun)
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i not running.\n"), localThreadId));
+
+                    ACE_Guard<ACE_Thread_Mutex> guard (m_orchestrator->m_bufferLock);
+
+                    if (m_orchestrator->getInputData().capacity() > 0)
                     {
                         processWorkload (localThreadId, currentPtr);
                         bool useful = !m_orchestrator->m_activeWriteBuffer->empty();
-//                        m_orchestrator->markAndSwap (useful);
-                        m_orchestrator->m_nextRun = ACE_OS::gettimeofday() + ACE_Time_Value (0, m_config.producerIntervalMs * 1000);
+                    }
+                    else
+                    {
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i input buffer empty.\n"), localThreadId));
                     }
                 }
                 else
                 {
-                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i m_sharedDataPtr is NULL\n"), localThreadId));
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i not ready\n"), localThreadId));
                 }
             }
             else if (m_config.role == ROLE_CONSUMER)
@@ -217,7 +223,7 @@ namespace Manager
             }
 
             ACE_OS::sleep (ACE_Time_Value (0, ::Config::getInstance().THREAD_SLEEP_TIME)); // 5ms yield
-        }
+        } // END-WHILE: while (!m_done)
 
         ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s Thread %d exiting cleanly\n"),
                    m_config.role ? ROLE_PRODUCER : ROLE_CONSUMER, localThreadId));

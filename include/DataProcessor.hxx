@@ -22,6 +22,7 @@ namespace Manager
 
         private:
             std::vector<TestData>* m_sharedDataPtr;
+            TaskOrchestrator<ObjectData, TestData>* m_orchestrator;
     };
 
 } // namespace Manager

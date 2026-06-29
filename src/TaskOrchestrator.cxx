@@ -40,50 +40,67 @@ namespace Manager
     }
 
     template<typename DT, typename IT>
-    void TaskOrchestrator<DT, IT>::runProducer (std::string name, void* args)
+    void TaskOrchestrator<DT, IT>::runProducer (std::string name, void* data, void* args)
     {
-        if (m_producerStarted)
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer m_producerFinished = %i\n"), 
+                    m_producerFinished)
+                  );
+
+        if (m_producerFinished >= ProducerState::RUNNING)
         {
-            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t] open() failed,%s task already running\n"), 
+            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer open() failed, %s task already running\n"), 
                         name.c_str())
                       );
             return;
         }
 
-        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Starting registered Producer task %s\n"), name.c_str()));
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runProducer starting registered Producer task %s\n"), name.c_str()));
 
         for (size_t i = 0; i < m_tasks.size(); ++i)
         {
-            if (m_producerStarted)
+            if (m_producerFinished == ProducerState::RUNNING)
             {
-                ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Producer task %s already started\n"), name.c_str()));
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Producer task %s already started and running\n"), name.c_str()));
                 return;
             }
 
             if (m_tasks[i]->getConfig().name == name)
             {
-                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Task %s found\n"), name.c_str()));
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Task %s found\n"), name.c_str()));
 
                 if (m_tasks[i]->getConfig().role == TaskRole::ROLE_PRODUCER)
                 {
-                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Opening task: %s\n"), name.c_str()));
-                    int ret = m_tasks[i]->open (args);
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Opening task: %s\n"), name.c_str()));
 
-                    if (ret < 0)
+                    if (ACE_OS::gettimeofday() >= m_nextRun)
                     {
-                        ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t] open() failed and returned %d for %s\n"), 
-                                    ret, name.c_str())
-                                  );
+                        m_currentInputData = *static_cast<std::vector<IT>*> (data);
+
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Producer input data size %i\n"), m_currentInputData.capacity()));
+
+                        int ret = m_tasks[i]->open (args);
+
+                        if (ret < 0)
+                        {
+                            ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer open() failed and returned %d for %s\n"), 
+                                        ret, name.c_str())
+                                      );
+                        }
+                        else
+                        {
+                            ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Producer task %s started\n"), name.c_str()));
+                            m_producerStarted = true;
+                            m_producerFinished = ProducerState::STARTED;
+                        }
                     }
                     else
                     {
-                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Producer task %s started\n"), name.c_str()));
-                        m_producerStarted = true;
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Producer task %s timeout not hit\n Producer not started\n"), name.c_str()));
                     }
                 }
                 else
                 {
-                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: Task: %s not registered as a Producer\n"), name.c_str()));
+                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Task: %s not registered as a Producer\n"), name.c_str()));
                 }
             }
         }
@@ -95,7 +112,7 @@ namespace Manager
     }
 
     template<typename DT, typename IT>
-    void TaskOrchestrator<DT, IT>::runConsumer (std::string name, void* args)
+    void TaskOrchestrator<DT, IT>::runConsumer (std::string name, void* data, void* args)
     {
         if (m_consumerStarted)
         {
@@ -181,6 +198,29 @@ namespace Manager
     ObjectPool<std::vector<DT> >* TaskOrchestrator<DT, IT>::getObjectPool()
     {
         return &m_objectPool;
+    }
+
+    template<typename DT, typename IT>
+    bool TaskOrchestrator<DT, IT>::isTimeForProducer() const
+    {
+        return ACE_OS::gettimeofday() >= m_nextRun;
+    }
+
+    template<typename DT, typename IT>
+    bool TaskOrchestrator<DT, IT>::hasValidData() const {
+        return m_activeReadState && m_activeReadState->valid;
+    }
+
+    template<typename DT, typename IT>
+    void TaskOrchestrator<DT, IT>::waitForConsumerCompletion() {
+        ACE_Time_Value timeout(5, 0);  // 5 seconds
+        while (!m_consumerFinished) {
+            if (m_consumerDoneCond.wait(&timeout) == -1) {
+                ACE_DEBUG((LM_WARNING, ACE_TEXT("Consumer wait timeout\n")));
+                break;
+            }
+        }
+        m_consumerFinished = false;  // Reset for next cycle
     }
 } // namespace Manager
 
