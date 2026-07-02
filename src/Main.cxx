@@ -7,12 +7,34 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
+#include <ace/Signal.h>
 
 #define DEBUG true
 
+static void signalHandler (int sig)
+{
+    const char* sigName = "unknown";
+    switch (sig)
+    {
+        case SIGINT:  sigName = "SIGINT";  break;
+        case SIGTERM: sigName = "SIGTERM"; break;
+        case SIGHUP:  sigName = "SIGHUP";  break;
+        case SIGSEGV: sigName = "SIGSEGV"; break;
+            // Add more as needed
+    }
+
+    ACE_DEBUG ((LM_INFO, ACE_TEXT ("Received signal %s (%d) - shutting down...\n"), sigName, sig));
+
+    if (sig == SIGSEGV)
+    {
+        ACE_DEBUG ((LM_CRITICAL, ACE_TEXT ("Segmentation fault - dumping core if enabled\n")));
+    }
+
+    Manager::DataProcessor::instance()->shutdown();
+    ACE_OS::exit (0);   // Or return from main if possible
+}
+
 using namespace Manager;
-
-
 
 float generateFloat (float min, float max)
 {
@@ -26,14 +48,59 @@ float generateInt (int min, int max)
     return min + static_cast<int> (scaled * (max - min + 1));
 }
 
+static std::vector<ObjectData> createFakeObjectData (size_t size)
+{
+    std::vector<ObjectData> data;
+    data.reserve (size);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        data.push_back (ObjectData (i, time (0), true, ::Config::getInstance().VALID_LEVEL));
+    }
+
+    return data;
+}
+
+static std::vector<TestData> createFakeTestData (size_t size, float min, float max)
+{
+    std::vector<TestData> data;
+    data.reserve (size);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        float level = generateFloat (min, max);
+        
+        if (i == 0 || i == (size - 1))
+        {
+            level = ::Config::getInstance().VALID_LEVEL + 1.0f;
+        }
+
+        data.push_back (TestData (i, level, false, generateFloat (0, 1000), generateFloat (0, 1000), generateFloat (0, 1000)));
+    }
+
+    return data;
+}
+
 //int main (int argc, char *argv[])
 int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 {
+    // Register signal handler
+    ACE_Sig_Action sa (signalHandler);
+    sa.register_action (SIGINT);
+    sa.register_action (SIGTERM);
+    sa.register_action (SIGHUP);
+    sa.register_action (SIGTSTP);
+    sa.register_action (SIGBUS);
+    sa.register_action (SIGILL);
+    sa.register_action (SIGFPE);
+    sa.register_action (SIGABRT);
+    sa.register_action (SIGSEGV);
+
     // Set ACE to show: Time | Severity | Thread ID | Message
     ACE_Log_Msg::instance()->open (argv[0], ACE_Log_Msg::STDERR); // | ACE_Log_Msg::LOGGER);
     ACE_Log_Msg::instance()->priority_mask (LM_DEBUG |  LM_INFO | LM_ERROR | LM_CRITICAL | LM_WARNING, ACE_Log_Msg::PROCESS);
 
-    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Starting up"));
+    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n\n"), "Starting up. Press Ctrl+C to interrupt."));
 
     // 1. Config + Pool
     ::Config::getInstance().init ("configuration.json");
@@ -46,70 +113,59 @@ int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 #endif
 
     ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Initializing DataProcessor"));
+    DataProcessor* processor = DataProcessor::instance();
+    TaskOrchestrator<ObjectData, TestData>* manager = processor->getOrchestrator();
 
-    DataProcessor::instance()->initialize (::Config::getInstance().getMaxObjects());
+    processor->initialize (::Config::getInstance().getMaxObjects());
+
+    size_t dataSize = 5;
 
     // Test cycle
-    std::vector<TestData> testData;
-    int numObjects =  generateInt (100, 1000);
+    
+//    int numObjects =  generateInt (100, 1000);
 
-    ACE_DEBUG ((LM_INFO, ACE_TEXT ("Creating testData with %i objects.\n"), numObjects));
+//    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: Creating TestData and ObjectData with %i objects.\n"), dataSize));
 
-    for (int i = 0; i< numObjects; i++)
-    {
-        testData.push_back (TestData (i,
-                                      generateFloat (0, 100),
-                                      generateFloat (0, 1000),
-                                      generateFloat (0, 1000),
-                                      generateFloat (0, 1000)
-                                     )
-                           );
+//    std::vector<TestData> testData = ::createFakeTestData (dataSize, 1, 10);
+//    std::vector<ObjectData> objectData = ::createFakeObjectData (dataSize);
+
+    manager->m_bufferA->resize (dataSize);
+    manager->m_bufferB->resize (dataSize);
+
+    //manager->m_bufferA = &objectData;
+
+    //manager->m_activeReadBuffer = manager->m_bufferA;
+    //manager->m_activeReadState->valid = true;
+
+    for (int cycle = 0; cycle < 20; ++cycle)
+    {  // Run several cycles
+        std::vector<TestData> testData = ::createFakeTestData (dataSize, 1, 10);
+
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: Testing TestData and ObjectData sizes %i, %i objects.\n"), testData.size(), manager->m_bufferA->size()));
+
+        DataProcessor::instance()->acceptData (&testData);
+
+        ACE_OS::sleep (ACE_Time_Value (0, 500000));  // 500ms delay
     }
+    
 
-    DataProcessor::instance()->acceptData (&testData);
-
-    int total = 4;
-    int count = 0;
-
-    while (count < total)
-    {
-        // Sleep for 2 seconds and 500 milliseconds
-        ACE_Time_Value sleep_duration (2, 500000); 
-
-        // ACE_OS::sleep takes an ACE_Time_Value reference
-        if (ACE_OS::sleep (sleep_duration) == -1)
-        {
-            // Handle interruption (returns -1 if interrupted by a signal)
-            ACE_DEBUG ((LM_ERROR, ACE_TEXT ("Sleep was interrupted.\n")));
-        }
-        else
-        {
-            numObjects = generateInt (100, 1000);
-            testData.clear();
-
-            ACE_DEBUG ((LM_INFO, ACE_TEXT ("Creating testData with %i objects.\n"), numObjects));
-
-            for (int i = 0; i< numObjects; i++)
-            {
-                testData.push_back (TestData (i,
-                                              generateFloat (0, 100),
-                                              generateFloat (0, 1000),
-                                              generateFloat (0, 1000),
-                                              generateFloat (0, 1000)
-                                             )
-                                   );
-            }
-
-            DataProcessor::instance()->acceptData (&testData);
-        }
-
-        count++;
-    }
-
-    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s\n"), "Test cycle complete"));
+    ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: %s\n"), "Test cycle complete"));
 
     // Later: shutdown on exit
-//    DataProcessor::instance()->shutdown();
+    processor->shutdown();
 
     return 0;
+
+
+    //for (int i = 0; i< numObjects; i++)
+    //{
+    //    testData.push_back (TestData (i,
+    //                                  generateFloat (0, 100),
+    //                                  false,
+    //                                  generateFloat (0, 1000),
+    //                                  generateFloat (0, 1000),
+    //                                  generateFloat (0, 1000)
+    //                                 )
+    //                       );
+    //}
 }

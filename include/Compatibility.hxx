@@ -38,6 +38,9 @@ public: \
     } \
 private: \
     ClassName(); \
-    ~ClassName();
+    ~ClassName() \
+     { \
+          shutdown(); \
+     }
 
 #endif // COMPATIBILITY_HXX

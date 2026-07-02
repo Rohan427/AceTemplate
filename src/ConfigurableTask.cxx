@@ -162,17 +162,19 @@ namespace Manager
 
         while (!m_done)
         {
-//             ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: %s in svc() while loop.\n"), m_config.name.c_str()));
+//             ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: %s %d in svc() while loop.\n"), m_config.name.c_str(), localThreadId));
+
+             if (m_done) break;
 
             std::vector<InputT>* currentPtr = m_orchestrator->getSharedDataPtr().value();
 
             if (m_config.role == ROLE_PRODUCER)
             {
-                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i.\n"), localThreadId));
+//                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i.\n"), localThreadId));
 
                 if (m_orchestrator->isProducerFinished() <= ProducerState::STARTED)
                 {
-                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i not running.\n"), localThreadId));
+//                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i not running.\n"), localThreadId));
 
                     ACE_Guard<ACE_Thread_Mutex> guard (m_orchestrator->m_bufferLock);
 
@@ -183,7 +185,7 @@ namespace Manager
                     }
                     else
                     {
-                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i input buffer empty.\n"), localThreadId));
+//                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i input buffer empty.\n"), localThreadId));
                     }
                 }
                 else
@@ -204,8 +206,6 @@ namespace Manager
                     if (currentPtr)
                     {
                         processWorkload (localThreadId, currentPtr);
-
-                        notifyConsumerDone();
                     }
                     else
                     {
@@ -237,35 +237,6 @@ namespace Manager
     {
         m_done = true;
         this->msg_queue()->deactivate();
-
-        // Optional immediate affinity reset for this task's threads
-        if (m_tier == SchedulingTier::RealTimeAndAffinity)
-        {
-            resetCoreAffinityOnShutdown();
-        }
-    }
-
-
-    template<typename DataT, typename InputT>
-    void ConfigurableTask<DataT, InputT>::resetCoreAffinityOnShutdown()
-    {
-        long totalCores = ::sysconf (_SC_NPROCESSORS_ONLN);
-        cpu_set_t fullSystemMask;
-        CPU_ZERO (&fullSystemMask);
-
-        for (int i = 0; i < totalCores; ++i)
-        {
-            CPU_SET (i, &fullSystemMask);
-        }
-
-        struct sched_param standardParam;
-        standardParam.sched_priority = 0;
-
-        ACE_thread_t self = ACE_OS::thr_self();
-        ::pthread_setschedparam (self, SCHED_OTHER, &standardParam);
-        ::pthread_setaffinity_np (self, sizeof (cpu_set_t), &fullSystemMask);
-
-        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] Core affinity reset to full system pool\n")));
     }
 
     template<typename DataT, typename InputT>

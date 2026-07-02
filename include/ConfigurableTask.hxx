@@ -49,8 +49,6 @@ namespace Manager
             std::vector<DataT>* getReadBuffer();
             BufferState getBufferState() const;
 
-            void resetCoreAffinityOnShutdown();
-
             TaskConfig getConfig()
             {
                 return m_config;

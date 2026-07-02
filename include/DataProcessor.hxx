@@ -19,6 +19,8 @@ namespace Manager
         public:
             void initialize (size_t poolCapacity);
             void acceptData (std::vector<TestData>* dataPtr);
+            TaskOrchestrator<ObjectData, TestData>* getOrchestrator() {return m_orchestrator;}
+            void shutdown();
 
         private:
             std::vector<TestData>* m_sharedDataPtr;

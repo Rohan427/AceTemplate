@@ -9,9 +9,14 @@
 #include <ace/Condition_T.h>
 #include <ace/Thread_Mutex.h>
 #include <ace/OS_NS_stdio.h>
+#include "ObjectData.hxx"
 
 namespace Manager
 {
+    std::vector<ObjectData> createFakeObjectData (size_t size);
+
+    std::vector<TestData> createFakeTestData (size_t size, float min, float max);
+
     enum ProducerState { STOPPED, STARTED, RUNNING, FINISHED };
 
     struct TaskConfig;
@@ -38,26 +43,52 @@ namespace Manager
         protected:
             virtual void processWorkload (int threadId, void* arg) override
             {
-                // Heavy producer work - replace with your real logic
-                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Producer processWorkload running\n")));
+                std::vector<InputT>* input; // = static_cast<std::vector<InputT>*>(arg);
 
-                this->m_orchestrator->setProducerFinished (ProducerState::RUNNING);
-                // Example: copy or compute into buffer
+                TaskOrchestrator<DataT, InputT>* manager = this->m_orchestrator;
 
-                std::vector<InputT>* input = static_cast<std::vector<InputT>*>(arg);
+                input = &manager->m_currentInputData;
 
-                this->m_orchestrator->markAndSwap (true);
-                this->m_orchestrator->m_nextRun = ACE_OS::gettimeofday() + ACE_Time_Value (0, this->m_config.producerIntervalMs * 1000);
-                this->m_orchestrator->setProducerFinished (ProducerState::STOPPED);
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\n\n\nProducer %d processing %zu items\n"), threadId, input ? input->size() : 0));
+
+                if (!input) return;
+
+                std::vector<DataT>* writeBuffer = manager->getActiveWriteBuffer();
+
+                if (!writeBuffer) return;
+
+                // Simple copy with level
+                for (size_t i = threadId; i < input->size(); i += this->m_config.numThreads)
+                {
+                    if (i < writeBuffer->size())
+                    {
+                        const InputT& td = (*input)[i];
+                        DataT& od = (*writeBuffer)[i];
+                        od.level = td.level;   // Copy level
+                        od.isValid = true;
+                    }
+                }
+
+                if (--manager->m_activeProducerThreads == 0)
+                {
+                    manager->markAndSwap (true);
+                    manager->m_nextRun = ACE_OS::gettimeofday() + ACE_Time_Value (0, this->m_config.producerIntervalMs * 1000);
+                    manager->setProducerFinished (ProducerState::STOPPED);
+                }
+
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("%s %i leaving processWorkload()\n\n"), this->m_config.name.c_str(), threadId));
+
+                
             }
     };
+
 
     template<typename DataT, typename InputT>
     class TestConsumerTask : public ConfigurableTask<DataT, InputT>
     {
         public:
             TestConsumerTask (const TaskConfig& cfg, TaskOrchestrator<DataT, InputT>* processor)
-                : ConfigurableTask<DataT, InputT>(cfg, processor)
+                : ConfigurableTask<DataT, InputT> (cfg, processor)
             {
                 ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] TestConsumerTask initialized\n")));
             }
@@ -65,21 +96,44 @@ namespace Manager
         protected:
             virtual void processWorkload (int threadId, void* arg) override
             {
-                // Fast consumer - modify shared dataPtr
-                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Consumer processWorkload running\n")));
+                std::vector<DataT>* readBuffer; // = static_cast<std::vector<DataT>*> (arg);
+                std::vector<InputT>* currentPtr = this->m_orchestrator->getSharedDataPtr().value();
 
-                std::vector<InputT>* input = static_cast<std::vector<InputT>*>(arg);
+                TaskOrchestrator<DataT, InputT>* manager = this->m_orchestrator;
+                readBuffer = manager->m_activeReadBuffer;
 
-                //if (TaskOrchestrator<DataT, InputT>::instance().m_sharedDataPtr.value() && !buffer.empty())
-                //{
-                //    // Example: remove processed items from shared data
-                //    if (!TaskOrchestrator<DataT, InputT>::instance().m_sharedDataPtr.value()->empty())
-                //    {
-                //        TaskOrchestrator<DataT, InputT>::instance().m_sharedDataPtr.value()->pop_back();
-                //    }
-                //}
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Consumer %d processing %zu objects\n"), threadId, readBuffer ? readBuffer->size() : 0));
 
-                this->m_orchestrator->setConsumerFinished (true);
+                if (!readBuffer) return;
+
+                // Stride division
+                size_t numThreads = this->m_config.numThreads;
+
+                for (size_t i = threadId; i < readBuffer->size(); i += numThreads)
+                {
+                    const DataT& obj = (*readBuffer)[i];
+                    // Find corresponding TestData and update flagged
+
+                    if (i < currentPtr->size())
+                    {
+                        InputT& td = (*currentPtr)[i];
+
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("input  %i: level: %f, flagged %i\n"), td.objectId, td.level, td.flagged));
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("object %i: level: %f, isValid %i\n"), obj.objectId, obj.level, obj.isValid));
+
+                        td.flagged = (td.level >= obj.level);
+
+
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("input updated %i: level: %f, flagged %i\n\n"), td.objectId, td.level, td.flagged));
+                    }
+                }
+
+                if (--manager->m_activeConsumerThreads == 0)
+                {
+                    this->notifyConsumerDone();
+                }
+
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("%s %i leaving processWorkload()\n\n"), this->m_config.name.c_str(), threadId));
             }
         };
 } // namespace Manager

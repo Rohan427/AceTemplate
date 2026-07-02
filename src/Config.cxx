@@ -32,19 +32,32 @@ uint64_t Config::getMaxFpuThreads()
     return MAX_FPU_THREADS;
 }
 
-int Config::getLevel()
+float Config::getLevel()
 {
-    UPDATE_INTERVAL = (int)getInt64 ("level");
+    UPDATE_INTERVAL = (float)getDouble ("level");
 
     return UPDATE_INTERVAL;
 }
-
 
 int Config::getDataUpdateInterval()
 {
     UPDATE_INTERVAL = (int)getUint64 ("dataUpdateInterval");
 
     return UPDATE_INTERVAL;
+}
+
+int Config::getMaxConThreads()
+{
+    MAX_CON_THREADS = (int)getInt64 ("maxConThreads");
+
+    return MAX_CON_THREADS;
+}
+
+int Config::getMaxProdThreads()
+{
+    MAX_PROD_THREADS = (int)getUint64 ("maxProTHreads");
+
+    return MAX_PROD_THREADS;
 }
 
 
@@ -149,6 +162,8 @@ bool Config::update()
                     getMaxFpuThreads();
                     getLevel();
                     getDataUpdateInterval();
+                    getMaxConThreads();
+                    getMaxProdThreads();
 
                     std::time (&timestamp);
                 }

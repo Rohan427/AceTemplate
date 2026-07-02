@@ -40,6 +40,23 @@ namespace Manager
     }
 
     template<typename DT, typename IT>
+    ConfigurableTask<DT, IT>* TaskOrchestrator<DT, IT>::findTask (std::string name, int role)
+    {
+        ConfigurableTask<DT, IT>* result = nullptr;
+
+        for (size_t i = 0; i < m_tasks.size(); ++i)
+        {
+            if ((m_tasks[i]->getConfig().name == name) && (m_tasks[i]->getConfig().role == role))
+            {
+                result = m_tasks[i];
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    template<typename DT, typename IT>
     void TaskOrchestrator<DT, IT>::runProducer (std::string name, void* data, void* args)
     {
         ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer m_producerFinished = %i\n"), 
@@ -78,6 +95,8 @@ namespace Manager
 
                         ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runProducer Producer input data size %i\n"), m_currentInputData.capacity()));
 
+                        m_activeProducerThreads = m_tasks[i]->getConfig().numThreads;
+
                         int ret = m_tasks[i]->open (args);
 
                         if (ret < 0)
@@ -114,40 +133,67 @@ namespace Manager
     template<typename DT, typename IT>
     void TaskOrchestrator<DT, IT>::runConsumer (std::string name, void* data, void* args)
     {
-        if (m_consumerStarted)
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer m_consumerFinished = %i\n"), 
+                    m_consumerFinished)
+                  );
+
+        if (m_consumerFinished)
         {
-            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t] open() failed,%s task already running\n"), 
+            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer open() failed, %s task already running\n"), 
                         name.c_str())
                       );
             return;
         }
 
-        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t] Starting registered Consumer task %s\n"), name.c_str()));
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer starting registered Producer task %s\n"), name.c_str()));
 
         for (size_t i = 0; i < m_tasks.size(); ++i)
         {
-            if (m_consumerStarted)
+            if (m_consumerFinished)
             {
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer Consumer task %s already started and running\n"), name.c_str()));
                 return;
             }
 
-            if ((m_tasks[i]->getConfig().name == name) && (m_tasks[i]->getConfig().role == TaskRole::ROLE_CONSUMER))
+            if (m_tasks[i]->getConfig().name == name)
             {
-                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t] Opening task: %s\n"), name.c_str()));
-                int ret = m_tasks[i]->open (args);
+                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer Task %s found\n"), name.c_str()));
 
-                if (ret < 0)
+                if (m_tasks[i]->getConfig().role == TaskRole::ROLE_CONSUMER)
                 {
-                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t] open() failed and returned %d for %s\n"), 
-                                ret, name.c_str())
-                              );
+                    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer Opening task: %s\n"), name.c_str()));
+
+                    {
+                        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer Consumer input data size %i\n"), m_currentInputData.capacity()));
+
+                        m_activeConsumerThreads = m_tasks[i]->getConfig().numThreads;
+
+                        int ret = m_tasks[i]->open (args);
+
+                        if (ret < 0)
+                        {
+                            ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer open() failed and returned %d for %s\n"), 
+                                        ret, name.c_str())
+                                      );
+                        }
+                        else
+                        {
+                            ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer Consumer task %s started\n"), name.c_str()));
+                            m_consumerStarted = true;
+                            m_consumerFinished = false;
+                        }
+                    }
                 }
                 else
                 {
-                    m_consumerStarted = true;
-                    return;
+                    ACE_DEBUG ((LM_ERROR, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator::runConsumer Task: %s not registered as a Consumer\n"), name.c_str()));
                 }
             }
+        }
+
+        if (!m_consumerStarted)
+        {
+            ACE_DEBUG ((LM_DEBUG, ACE_TEXT("[%T][%M][TID:%t]: Consumer task %s not found or not started\n"), name.c_str()));
         }
     }
 
@@ -173,25 +219,41 @@ namespace Manager
     template<typename DT, typename IT>
     void TaskOrchestrator<DT, IT>::stopAll()
     {
-        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] Stopping all tasks...\n")));
+        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t]: Stopping all tasks...\n")));
 
-        for (size_t i = 0; i < m_tasks.size(); ++i)
-        {
-            if (m_tasks[i]) m_tasks[i]->stop();
-        }
-
+        // Signal all tasks to stop
         for (size_t i = 0; i < m_tasks.size(); ++i)
         {
             if (m_tasks[i])
             {
-                m_tasks[i]->wait();   // Wait for threads to exit
-                delete m_tasks[i];    // Clean up
+                m_tasks[i]->stop();   // Sets m_done = true and deactivates queue
+            }
+        }
+
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: Waiting for all tasks to complete...\n")));
+
+        // Wait for all threads to exit cleanly
+        for (size_t i = 0; i < m_tasks.size(); ++i)
+        {
+            if (m_tasks[i])
+            {
+                m_tasks[i]->wait();   // Block until thread exits
+                delete m_tasks[i];
                 m_tasks[i] = 0;
             }
         }
 
         m_tasks.clear();
-        ACE_DEBUG ((LM_INFO, ACE_TEXT("[%T][%M][TID:%t] All tasks stopped and cleaned up.\n")));
+
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: Clearing buffers...\n")));
+        // Release buffers back to pool
+        if (m_bufferA) m_objectPool.release (m_bufferA);
+        if (m_bufferB) m_objectPool.release (m_bufferB);
+        m_bufferA = m_bufferB = nullptr;
+
+        resetCoreAffinityOnShutdown();
+
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: All tasks stopped and cleaned up.\n")));
     }
 
     template<typename DT, typename IT>
@@ -212,15 +274,27 @@ namespace Manager
     }
 
     template<typename DT, typename IT>
-    void TaskOrchestrator<DT, IT>::waitForConsumerCompletion() {
-        ACE_Time_Value timeout(5, 0);  // 5 seconds
-        while (!m_consumerFinished) {
-            if (m_consumerDoneCond.wait(&timeout) == -1) {
-                ACE_DEBUG((LM_WARNING, ACE_TEXT("Consumer wait timeout\n")));
-                break;
-            }
+    void TaskOrchestrator<DT, IT>::resetCoreAffinityOnShutdown()
+    {
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: Restore affinity...\n")));
+
+        long totalCores = ::sysconf (_SC_NPROCESSORS_ONLN);
+        cpu_set_t fullSystemMask;
+        CPU_ZERO (&fullSystemMask);
+
+        for (int i = 0; i < totalCores; ++i)
+        {
+            CPU_SET (i, &fullSystemMask);
         }
-        m_consumerFinished = false;  // Reset for next cycle
+
+        struct sched_param standardParam;
+        standardParam.sched_priority = 0;
+
+        ACE_thread_t self = ACE_OS::thr_self();
+        ::pthread_setschedparam (self, SCHED_OTHER, &standardParam);
+        ::pthread_setaffinity_np (self, sizeof (cpu_set_t), &fullSystemMask);
+
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: Core affinity reset to full system pool\n")));
     }
 } // namespace Manager
 

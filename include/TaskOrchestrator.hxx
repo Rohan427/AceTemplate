@@ -38,6 +38,7 @@ namespace Manager
             BufferState m_bufferStateB;
             BufferState* m_activeWriteState;
             BufferState* m_activeReadState;
+            bool m_dataValid;
 
             ACE_Thread_Mutex m_bufferLock;
             ACE_Thread_Mutex m_notifyLock;
@@ -45,6 +46,11 @@ namespace Manager
 
             unsigned long long m_versionCounter;
             ACE_Time_Value m_nextRun;
+            ACE_Atomic_Op<ACE_Thread_Mutex, int> m_activeConsumerThreads;
+            ACE_Atomic_Op<ACE_Thread_Mutex, int>m_activeProducerThreads;
+
+            ACE_Atomic_Op<ACE_Thread_Mutex, std::vector<IT>*> m_sharedDataPtr;
+            std::vector<IT> m_currentInputData;
 
 
             static TaskOrchestrator& instance();
@@ -294,7 +300,6 @@ namespace Manager
             }
 
         private:
-
             static TaskOrchestrator *s_instance;
             static ACE_Thread_Mutex s_creationLock;
 
@@ -313,7 +318,6 @@ namespace Manager
             bool m_consumerStarted;
             int m_producerFinished;
             bool m_consumerFinished;
-            bool m_dataValid;
 
             TaskOrchestrator() : m_objectPool (::Config::getInstance().getMaxObjects() * 2),
                                  m_bufferCapacity(::Config::getInstance().getMaxObjects()),
@@ -360,8 +364,8 @@ namespace Manager
             }
 
         protected:
-            ACE_Atomic_Op<ACE_Thread_Mutex, std::vector<IT>*> m_sharedDataPtr;
-            std::vector<IT> m_currentInputData;
+//            ACE_Atomic_Op<ACE_Thread_Mutex, std::vector<IT>*> m_sharedDataPtr;
+//            std::vector<IT> m_currentInputData;
 
         public:
             void updateSharedDataPtr (std::vector<IT>* newPtr)
@@ -390,8 +394,42 @@ namespace Manager
 
             void clearInputData()
             {
-                std::vector<IT>().swap (m_currentInputData); ;
+                std::vector<IT>().swap (m_currentInputData);
             }
+
+            void waitForConsumerCompletion (std::string name, int role)
+            {
+                ACE_Time_Value timeout = ACE_OS::gettimeofday() + ACE_Time_Value(5, 0);  // 5 seconds from now
+                ACE_Time_Value start = ACE_OS::gettimeofday();
+
+                ConfigurableTask<DT, IT>* task;
+
+                while (!m_consumerFinished)
+                {
+                    if (m_consumerDoneCond.wait (&timeout) == -1)
+                    {
+                        ACE_DEBUG ((LM_WARNING, ACE_TEXT ("Consumer wait timeout - stopping consumer %s\n"), name.c_str()));
+
+                        if ((task = findTask (name, role)))
+                        {
+                            task->stop();  // Stop to prevent corrupt data
+                        }
+
+                        break;
+                    }
+
+                    if (ACE_OS::gettimeofday() - start > timeout)
+                    {
+                        break;
+                    }
+                }
+
+                m_consumerFinished = false;  // Reset for next cycle
+            }
+
+            ConfigurableTask<DT, IT>* findTask (std::string name, int role);
+
+            void resetCoreAffinityOnShutdown();
     };
 } // namespace Manager
 

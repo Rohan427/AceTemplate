@@ -5,6 +5,8 @@
     "maxThreads" : 32,         // The maximum number of threads allocated to the application
     "maxObjects" : 1000,      // Maximum number of objects allowed to be tracked/processed
     "maxFpuThreads" : 16,
-    "dataUpdateInterval" : 2,
-    "level" : 90
+    "dataUpdateInterval" : 500,
+    "level" : 5.0,
+    "maxConThreads" : 4,
+    "maxProTHreads" : 5
 }

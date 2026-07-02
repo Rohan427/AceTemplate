@@ -17,19 +17,19 @@ namespace Manager
 
         // Producer (long-running)
         TaskConfig prodCfg;
-        prodCfg.numThreads = 1; // ::Config::getInstance().getMaxThreads() / 2;
+        prodCfg.numThreads = ::Config::getInstance().MAX_PROD_THREADS; // ::Config::getInstance().getMaxThreads() / 2;
         prodCfg.basePriority = 30;
         prodCfg.workloadType = WorkloadType::PRIMARY_WORKER;
         prodCfg.useRealTime = true;
         prodCfg.intervalMs = 0;
         prodCfg.name = "DataProducer";
         prodCfg.role = ROLE_PRODUCER;
-        prodCfg.producerIntervalMs = 500;  // 120000 is 2 minutes
+        prodCfg.producerIntervalMs = ::Config::getInstance().UPDATE_INTERVAL;  // 120000 is 2 minutes
         prodCfg.tier = SchedulingTier::RealTimeAndAffinity;
 
         // Consumer (fast)
         TaskConfig consCfg;
-        consCfg.numThreads = 1;
+        consCfg.numThreads = ::Config::getInstance().MAX_CON_THREADS;
         consCfg.basePriority = 50;
         consCfg.workloadType = WorkloadType::SIBLING_WORKER;
         consCfg.useRealTime = true;
@@ -44,45 +44,39 @@ namespace Manager
         m_orchestrator->initialize (::Config::getInstance().getMaxThreads());
 
         m_orchestrator->createProducer (prodCfg);
+        m_orchestrator->createConsumer (consCfg);
     }
 
     void DataProcessor::acceptData (std::vector<TestData>* dataPtr)
     {
-        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::acceptData\n")));
+        ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::acceptData, with data size of %i\n"), dataPtr->size()));
 
         m_sharedDataPtr = dataPtr;
 
         m_orchestrator->runProducer ("DataProducer", dataPtr, 0);
 
-        //if (m_consumer)
-        //{
-        //    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Consumer acceptData.\n")));
+        if (m_orchestrator->isDataValid())
+        {
+            m_orchestrator->updateSharedDataPtr (dataPtr);
+            m_orchestrator->runConsumer ("DataConsumer", dataPtr, 0);
+            m_orchestrator->waitForConsumerCompletion ("DataConsumer", TaskRole::ROLE_CONSUMER);
+        }
+    }
 
-        //    TaskOrchestrator<ObjectData, TestData>::instance().updateSharedDataPtr (dataPtr);
+    void DataProcessor::shutdown()
+    {
+        ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::shutdown\n")));
 
-            //if (m_sharedDataPtr)
-            //{
-            //    m_consumerFinished = false;
-            //    m_consumer->triggerConsumer();
-
-            //    ACE_Time_Value timeout = ACE_OS::gettimeofday() + ACE_Time_Value (5, 0); // 60 second timeout
-
-            //    while (!m_consumerFinished)
-            //    {
-            //        ACE_DEBUG ((LM_ERROR, ACE_TEXT ("Consumer acceptData() processing loop\n")));
-
-            //        if (m_consumerDoneCond.wait (&timeout) == -1)
-            //        {
-            //            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("---------------->Consumer wait timeout<---------------\n")));
-            //            break;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: DataProcessor::acceptData Consumer m_sharedDataPtr is NULL.\n")));
-            //}
-        //}
+        if (m_orchestrator)
+        {
+            m_orchestrator->stopAll();
+        }
+        else
+        {
+            ACE_DEBUG ((LM_WARNING, ACE_TEXT ("[%T][%M][TID:%t]: TaskOrchestrator already closed\n")));
+            TaskOrchestrator<ObjectData, TestData>::instance().stopAll();
+        }
+        // Any other cleanup
     }
 
 } // namespace Manager
