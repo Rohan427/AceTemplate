@@ -1,0 +1,120 @@
+<html><head><title>Thread_Exit.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Thread_Exit.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Thread_Exit.h";
+top.document.title  = "Thread_Exit.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//=============================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> *  @file    Thread_Exit.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> *  @author Carlos O'Ryan &lt;coryan@uci.edu&gt;</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> */</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment">//=============================================================================</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"></span>
+<a name="11"><font size=-1>11     </font></a><span class="comment"></span>
+<a name="12"><font size=-1>12     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#8725">ACE_THREAD_EXIT_H</a></span>
+<a name="13"><font size=-1>13     </font></a><span class="preproc">#define <a href="dictionary_A.html#8725">ACE_THREAD_EXIT_H</a></span>
+<a name="14"><font size=-1>14     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="15"><font size=-1>15     </font></a><span class="string"></span>
+<a name="16"><font size=-1>16     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/config-all.h&quot;</span>
+<a name="17"><font size=-1>17     </font></a><span class="string"></span>
+<a name="18"><font size=-1>18     </font></a><span class="string"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#26">ACE_LACKS_PRAGMA_ONCE</a>)</span>
+<a name="19"><font size=-1>19     </font></a><span class="default"></span><span class="preproc"># pragma </span><span class="default">once</span>
+<a name="20"><font size=-1>20     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_PRAGMA_ONCE */</span>
+<a name="21"><font size=-1>21     </font></a><span class="comment"></span>
+<a name="22"><font size=-1>22     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/Thread_Control.h&quot;</span>
+<a name="23"><font size=-1>23     </font></a><span class="string"></span>
+<a name="24"><font size=-1>24     </font></a><span class="string"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="25"><font size=-1>25     </font></a><span class="string"></span>
+<a name="26"><font size=-1>26     </font></a><span class="string"></span><span class="comment">/**</span>
+<a name="27"><font size=-1>27     </font></a><span class="comment"> * @class ACE_Thread_Exit</span>
+<a name="28"><font size=-1>28     </font></a><span class="comment"> *</span>
+<a name="29"><font size=-1>29     </font></a><span class="comment"> * @brief Keep exit information for a Thread in thread specific storage.</span>
+<a name="30"><font size=-1>30     </font></a><span class="comment"> * so that the thread-specific exit hooks will get called no</span>
+<a name="31"><font size=-1>31     </font></a><span class="comment"> * matter how the thread exits (e.g., via &lt;ACE_Thread::exit&gt;, C++</span>
+<a name="32"><font size=-1>32     </font></a><span class="comment"> * or Win32 exception, &quot;falling off the end&quot; of the thread entry</span>
+<a name="33"><font size=-1>33     </font></a><span class="comment"> * point function, etc.).</span>
+<a name="34"><font size=-1>34     </font></a><span class="comment"> *</span>
+<a name="35"><font size=-1>35     </font></a><span class="comment"> * This clever little helper class is stored in thread-specific</span>
+<a name="36"><font size=-1>36     </font></a><span class="comment"> * storage using the &lt;ACE_TSS&gt; wrapper.  When a thread exits the</span>
+<a name="37"><font size=-1>37     </font></a><span class="comment"> * &lt;ACE_TSS::cleanup&gt; function deletes this object, thereby</span>
+<a name="38"><font size=-1>38     </font></a><span class="comment"> * closing it down gracefully.</span>
+<a name="39"><font size=-1>39     </font></a><span class="comment"> */</span>
+<a name="40"><font size=-1>40     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#8726">ACE_Thread_Exit</a></span>
+<a name="41"><font size=-1>41     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="42"><font size=-1>42     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="43"><font size=-1>43     </font></a><span class="default">  </span><span class="comment">/// Capture the Thread that will be cleaned up automatically.</span>
+<a name="44"><font size=-1>44     </font></a><span class="comment">  <a href="dictionary_A.html#8727">ACE_Thread_Exit</a> </span><span class="default">();</span>
+<a name="45"><font size=-1>45     </font></a><span class="default"></span>
+<a name="46"><font size=-1>46     </font></a><span class="default">  </span><span class="comment">/// Set the ACE_Thread_Manager.</span>
+<a name="47"><font size=-1>47     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_T.html#8735">thr_mgr</a> </span><span class="default">(<a href="dictionary_A.html#388">ACE_Thread_Manager</a> *<a href="dictionary_T.html#8736">tm</a>);</span>
+<a name="48"><font size=-1>48     </font></a><span class="default"></span>
+<a name="49"><font size=-1>49     </font></a><span class="default">  </span><span class="comment">/// Destructor calls the thread-specific exit hooks when a thread</span>
+<a name="50"><font size=-1>50     </font></a><span class="comment">  /// exits.</span>
+<a name="51"><font size=-1>51     </font></a><span class="comment">  </span><span class="default">~<a href="dictionary_A.html#8738">ACE_Thread_Exit</a> ();</span>
+<a name="52"><font size=-1>52     </font></a><span class="default"></span>
+<a name="53"><font size=-1>53     </font></a><span class="default">  </span><span class="comment">/// Singleton access point.</span>
+<a name="54"><font size=-1>54     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#8726">ACE_Thread_Exit</a> </span><span class="default">*<a href="dictionary_I.html#8733">instance</a> ();</span>
+<a name="55"><font size=-1>55     </font></a><span class="default"></span>
+<a name="56"><font size=-1>56     </font></a><span class="default">  </span><span class="comment">/// Cleanup method, used by the ACE_Object_Manager to destroy the</span>
+<a name="57"><font size=-1>57     </font></a><span class="comment">  /// singleton.</span>
+<a name="58"><font size=-1>58     </font></a><span class="comment">  </span><span class="keyword">static void <a href="dictionary_C.html#8731">cleanup</a> </span><span class="default">(</span><span class="keyword">void </span><span class="default">*<a href="dictionary_I.html#8732">instance</a>);</span>
+<a name="59"><font size=-1>59     </font></a><span class="default"></span>
+<a name="60"><font size=-1>60     </font></a><span class="default">  <a href="dictionary_A.html#408">ACE_ALLOC_HOOK_DECLARE</a>;</span>
+<a name="61"><font size=-1>61     </font></a><span class="default"></span>
+<a name="62"><font size=-1>62     </font></a><span class="default"></span><span class="keyword">private</span><span class="default">:</span>
+<a name="63"><font size=-1>63     </font></a><span class="default">  </span><span class="comment">/// Automatically add/remove the thread from the</span>
+<a name="64"><font size=-1>64     </font></a><span class="comment">  /// ACE_Thread_Manager.</span>
+<a name="65"><font size=-1>65     </font></a><span class="comment">  <a href="dictionary_A.html#2649">ACE_Thread_Control</a> <a href="dictionary_T.html#8737">thread_control_</a></span><span class="default">;</span>
+<a name="66"><font size=-1>66     </font></a><span class="default"></span>
+<a name="67"><font size=-1>67     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="68"><font size=-1>68     </font></a><span class="comment">   * Used to detect whether we should create a new instance (or not)</span>
+<a name="69"><font size=-1>69     </font></a><span class="comment">   * within the instance method -- we don't trust the instance_ ptr</span>
+<a name="70"><font size=-1>70     </font></a><span class="comment">   * because the destructor may have run (if ACE::fini() was called).</span>
+<a name="71"><font size=-1>71     </font></a><span class="comment">   * See bug #526.</span>
+<a name="72"><font size=-1>72     </font></a><span class="comment">   * We don't follow the singleton pattern due to dependency issues.</span>
+<a name="73"><font size=-1>73     </font></a><span class="comment">   */</span>
+<a name="74"><font size=-1>74     </font></a><span class="comment">  </span><span class="keyword">static bool <a href="dictionary_I.html#8734">is_constructed_</a></span><span class="default">;</span>
+<a name="75"><font size=-1>75     </font></a><span class="default">};</span>
+<a name="76"><font size=-1>76     </font></a><span class="default"></span>
+<a name="77"><font size=-1>77     </font></a><span class="default"></span><span class="comment">/**</span>
+<a name="78"><font size=-1>78     </font></a><span class="comment"> * @class ACE_Thread_Exit_Maybe</span>
+<a name="79"><font size=-1>79     </font></a><span class="comment"> *</span>
+<a name="80"><font size=-1>80     </font></a><span class="comment"> * @brief A version of ACE_Thread_Exit that is created dynamically</span>
+<a name="81"><font size=-1>81     </font></a><span class="comment"> * under the hood if the flag is set to TRUE.</span>
+<a name="82"><font size=-1>82     </font></a><span class="comment"> *</span>
+<a name="83"><font size=-1>83     </font></a><span class="comment"> * Allows the appearance of a &quot;smart pointer&quot;, but is not</span>
+<a name="84"><font size=-1>84     </font></a><span class="comment"> * always created.</span>
+<a name="85"><font size=-1>85     </font></a><span class="comment"> */</span>
+<a name="86"><font size=-1>86     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#8739">ACE_Thread_Exit_Maybe</a></span>
+<a name="87"><font size=-1>87     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="88"><font size=-1>88     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="89"><font size=-1>89     </font></a><span class="default">  </span><span class="comment">/// Don't create an ACE_Thread_Exit instance by default.</span>
+<a name="90"><font size=-1>90     </font></a><span class="comment">  <a href="dictionary_A.html#8740">ACE_Thread_Exit_Maybe</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_F.html#8741">flag</a> </span><span class="default">= </span><span class="number">0</span><span class="default">);</span>
+<a name="91"><font size=-1>91     </font></a><span class="default"></span>
+<a name="92"><font size=-1>92     </font></a><span class="default">  </span><span class="comment">/// Destroys the underlying ACE_Thread_Exit instance if it exists.</span>
+<a name="93"><font size=-1>93     </font></a><span class="comment">  </span><span class="default">~<a href="dictionary_A.html#8745">ACE_Thread_Exit_Maybe</a> ();</span>
+<a name="94"><font size=-1>94     </font></a><span class="default"></span>
+<a name="95"><font size=-1>95     </font></a><span class="default">  </span><span class="comment">/// Delegates to underlying instance.</span>
+<a name="96"><font size=-1>96     </font></a><span class="comment">  <a href="dictionary_A.html#8726">ACE_Thread_Exit</a> </span><span class="default">* </span><span class="keyword">operator </span><span class="default">-&gt; () </span><span class="keyword">const</span><span class="default">;</span>
+<a name="97"><font size=-1>97     </font></a><span class="default"></span>
+<a name="98"><font size=-1>98     </font></a><span class="default">  </span><span class="comment">/// Returns the underlying instance.</span>
+<a name="99"><font size=-1>99     </font></a><span class="comment">  <a href="dictionary_A.html#8726">ACE_Thread_Exit</a> </span><span class="default">* <a href="dictionary_I.html#8742">instance</a> () </span><span class="keyword">const</span><span class="default">;</span>
+<a name="100"><font size=-1>100     </font></a><span class="default"></span>
+<a name="101"><font size=-1>101     </font></a><span class="default"></span><span class="keyword">private</span><span class="default">:</span>
+<a name="102"><font size=-1>102     </font></a><span class="default">  </span><span class="comment">/// Holds the underlying instance.</span>
+<a name="103"><font size=-1>103     </font></a><span class="comment">  <a href="dictionary_A.html#8726">ACE_Thread_Exit</a> </span><span class="default">*<a href="dictionary_I.html#8743">instance_</a>;</span>
+<a name="104"><font size=-1>104     </font></a><span class="default">};</span>
+<a name="105"><font size=-1>105     </font></a><span class="default"></span>
+<a name="106"><font size=-1>106     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="107"><font size=-1>107     </font></a><span class="default"></span>
+<a name="108"><font size=-1>108     </font></a><span class="default"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="109"><font size=-1>109     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* ACE_THREAD_EXIT_H */</span>
+<a name="110"><font size=-1>110     </font></a><span class="comment"></span>
+</pre></body></html>

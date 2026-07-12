@@ -7,7 +7,6 @@
 #include "ObjectData.hxx"
 #include "ObjectPool.hxx"
 #include <ace/Task.h>
-#include <ace/Barrier.h>
 #include <vector>
 
 namespace Manager
@@ -17,19 +16,17 @@ namespace Manager
 
     class DataProcessor;
 
-    enum TaskRole { ROLE_PRODUCER, ROLE_CONSUMER };
-
     struct TaskConfig
     {
         int numThreads;
         int basePriority;
-        WorkloadType workloadType;
+        int workloadType;
         bool useRealTime;
         unsigned long intervalMs;
         std::string name;
-        TaskRole role;
+        int role;
         unsigned long producerIntervalMs;
-        SchedulingTier tier;
+        int tier;
     };
 
     template<typename DataT, typename InputT>
@@ -70,9 +67,9 @@ namespace Manager
 
             ACE_Barrier* m_barrier;
             bool m_done;
-            std::atomic<int> m_threadIndexer;
+            AtomicInt m_threadIndexer;
             std::vector<HardwareCore> m_hardwareCorePool;
-            SchedulingTier m_tier;
+            int m_tier;
 
             // Necessary templte function definitions
         public:

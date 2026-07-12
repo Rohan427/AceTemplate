@@ -4,11 +4,8 @@
 
 #include "ConfigurableTask.hxx"
 #include <ace/Task.h>
-#include <ace/Barrier.h>
 #include <ace/Thread.h>
-#include <ace/Condition_T.h>
-#include <ace/Thread_Mutex.h>
-#include <ace/OS_NS_stdio.h>
+
 #include "ObjectData.hxx"
 
 namespace Manager
@@ -16,8 +13,6 @@ namespace Manager
     std::vector<ObjectData> createFakeObjectData (size_t size);
 
     std::vector<TestData> createFakeTestData (size_t size, float min, float max);
-
-    enum ProducerState { STOPPED, STARTED, RUNNING, FINISHED };
 
     struct TaskConfig;
 

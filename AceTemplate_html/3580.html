@@ -1,0 +1,314 @@
+<html><head><title>High_Res_Timer.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/High_Res_Timer.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/High_Res_Timer.h";
+top.document.title  = "High_Res_Timer.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//==========================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> *  @file    High_Res_Timer.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> *  @author Douglas C. Schmidt &lt;d.schmidt@vanderbilt.edu&gt;</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> */</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment">//==========================================================================</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"></span>
+<a name="11"><font size=-1>11     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#8309">ACE_HIGH_RES_TIMER_H</a></span>
+<a name="12"><font size=-1>12     </font></a><span class="preproc">#define <a href="dictionary_A.html#8309">ACE_HIGH_RES_TIMER_H</a></span>
+<a name="13"><font size=-1>13     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="14"><font size=-1>14     </font></a><span class="string"></span>
+<a name="15"><font size=-1>15     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/ACE_export.h&quot;</span>
+<a name="16"><font size=-1>16     </font></a><span class="string"></span>
+<a name="17"><font size=-1>17     </font></a><span class="string"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#26">ACE_LACKS_PRAGMA_ONCE</a>)</span>
+<a name="18"><font size=-1>18     </font></a><span class="default"></span><span class="preproc"># pragma </span><span class="default">once</span>
+<a name="19"><font size=-1>19     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_PRAGMA_ONCE */</span>
+<a name="20"><font size=-1>20     </font></a><span class="comment"></span>
+<a name="21"><font size=-1>21     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/Basic_Types.h&quot;</span>
+<a name="22"><font size=-1>22     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/OS_NS_time.h&quot;</span>
+<a name="23"><font size=-1>23     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/Time_Value.h&quot;</span>
+<a name="24"><font size=-1>24     </font></a><span class="string"></span>
+<a name="25"><font size=-1>25     </font></a><span class="string"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="26"><font size=-1>26     </font></a><span class="string"></span>
+<a name="27"><font size=-1>27     </font></a><span class="string"></span><span class="comment">/**</span>
+<a name="28"><font size=-1>28     </font></a><span class="comment"> * @class ACE_High_Res_Timer</span>
+<a name="29"><font size=-1>29     </font></a><span class="comment"> *</span>
+<a name="30"><font size=-1>30     </font></a><span class="comment"> * @brief A high resolution timer class wrapper that encapsulates</span>
+<a name="31"><font size=-1>31     </font></a><span class="comment"> * OS-specific high-resolution timers, such as those found on</span>
+<a name="32"><font size=-1>32     </font></a><span class="comment"> * Win32/Pentium, and VxWorks.</span>
+<a name="33"><font size=-1>33     </font></a><span class="comment"> *</span>
+<a name="34"><font size=-1>34     </font></a><span class="comment"> * Most of the member functions don't return values.  The only</span>
+<a name="35"><font size=-1>35     </font></a><span class="comment"> * reason that one would fail is if high-resolution time isn't</span>
+<a name="36"><font size=-1>36     </font></a><span class="comment"> * supported on the platform.  To avoid impacting performance</span>
+<a name="37"><font size=-1>37     </font></a><span class="comment"> * and complicating the interface, in that case,</span>
+<a name="38"><font size=-1>38     </font></a><span class="comment"> * &lt;ACE_OS::gettimeofday&gt; is used instead.</span>
+<a name="39"><font size=-1>39     </font></a><span class="comment"> * The global scale factor is required for platforms that have</span>
+<a name="40"><font size=-1>40     </font></a><span class="comment"> * high-resolution timers that return units other than</span>
+<a name="41"><font size=-1>41     </font></a><span class="comment"> * microseconds, such as clock ticks.  It is represented as a</span>
+<a name="42"><font size=-1>42     </font></a><span class="comment"> * static u_long, can only be accessed through static methods,</span>
+<a name="43"><font size=-1>43     </font></a><span class="comment"> * and is used by all instances of High Res Timer.  The member</span>
+<a name="44"><font size=-1>44     </font></a><span class="comment"> * functions that return or print times use the global scale</span>
+<a name="45"><font size=-1>45     </font></a><span class="comment"> * factor.  They divide the &quot;time&quot; that they get from</span>
+<a name="46"><font size=-1>46     </font></a><span class="comment"> * &lt;ACE_OS::gethrtime&gt; by global_scale_factor_ to obtain the</span>
+<a name="47"><font size=-1>47     </font></a><span class="comment"> * time in microseconds.  Its units are therefore 1/microsecond.</span>
+<a name="48"><font size=-1>48     </font></a><span class="comment"> * On Windows the global_scale_factor_ units are 1/millisecond.</span>
+<a name="49"><font size=-1>49     </font></a><span class="comment"> * There's a macro &lt;ACE_HR_SCALE_CONVERSION&gt; which gives the</span>
+<a name="50"><font size=-1>50     </font></a><span class="comment"> * units/second.  Because it's possible that the units/second</span>
+<a name="51"><font size=-1>51     </font></a><span class="comment"> * changes in the future, it's recommended to use it instead</span>
+<a name="52"><font size=-1>52     </font></a><span class="comment"> * of a &quot;hard coded&quot; solution.</span>
+<a name="53"><font size=-1>53     </font></a><span class="comment"> * Dependent on the platform and used class members, there's a</span>
+<a name="54"><font size=-1>54     </font></a><span class="comment"> * maximum elapsed period before overflow (which is not checked).</span>
+<a name="55"><font size=-1>55     </font></a><span class="comment"> * Look at the documentation with some members functions.</span>
+<a name="56"><font size=-1>56     </font></a><span class="comment"> * On some (most?) implementations it's not recommended to measure</span>
+<a name="57"><font size=-1>57     </font></a><span class="comment"> * &quot;long&quot; timeperiods, because the error's can accumulate fast.</span>
+<a name="58"><font size=-1>58     </font></a><span class="comment"> * This is probably not a problem profiling code, but could be</span>
+<a name="59"><font size=-1>59     </font></a><span class="comment"> * on if the high resolution timer class is used to initiate</span>
+<a name="60"><font size=-1>60     </font></a><span class="comment"> * actions after a &quot;long&quot; timeout.</span>
+<a name="61"><font size=-1>61     </font></a><span class="comment"> * On Intel platforms, we use RDTSC which returns the number of clock</span>
+<a name="62"><font size=-1>62     </font></a><span class="comment"> * ticks since system boot.  For a 200MHz cpu, each clock tick</span>
+<a name="63"><font size=-1>63     </font></a><span class="comment"> * is 1/200 of a microsecond; the global_scale_factor_ should</span>
+<a name="64"><font size=-1>64     </font></a><span class="comment"> * therefore be 200 or 200000 if it's in unit/millisecond.</span>
+<a name="65"><font size=-1>65     </font></a><span class="comment"> * On Windows ::QueryPerformanceCounter() is used, which can be a</span>
+<a name="66"><font size=-1>66     </font></a><span class="comment"> * different implementation depending on the used windows HAL</span>
+<a name="67"><font size=-1>67     </font></a><span class="comment"> * (Hardware Abstraction Layer).  On some it uses the PC &quot;timer chip&quot;</span>
+<a name="68"><font size=-1>68     </font></a><span class="comment"> * while it uses RDTSC on others.</span>
+<a name="69"><font size=-1>69     </font></a><span class="comment"> * @note The elapsed time calculations in the print methods use</span>
+<a name="70"><font size=-1>70     </font></a><span class="comment"> * ACE_hrtime_t values.  Those methods do _not_ check for overflow!</span>
+<a name="71"><font size=-1>71     </font></a><span class="comment"> * @note Gabe &lt;begeddov@proaxis.com&gt; raises this issue regarding</span>
+<a name="72"><font size=-1>72     </font></a><span class="comment"> * &lt;ACE_OS::gethrtime&gt;: on multi-processors, the processor that</span>
+<a name="73"><font size=-1>73     </font></a><span class="comment"> * you query for your @c timer.stop() value might not be the one</span>
+<a name="74"><font size=-1>74     </font></a><span class="comment"> * you queried for @c timer.start().  Its not clear how much</span>
+<a name="75"><font size=-1>75     </font></a><span class="comment"> * divergence there would be, if any.</span>
+<a name="76"><font size=-1>76     </font></a><span class="comment"> * A RDTSC NOTE: RDTSC is the Intel Pentium read-time stamp counter</span>
+<a name="77"><font size=-1>77     </font></a><span class="comment"> * and is actualy a 64 bit clock cycle counter, which is increased</span>
+<a name="78"><font size=-1>78     </font></a><span class="comment"> * with every cycle.  It has a low overhead and can be read within</span>
+<a name="79"><font size=-1>79     </font></a><span class="comment"> * 16 (pentium) or 32 (pentium II,III,...) cycles, but it doesn't</span>
+<a name="80"><font size=-1>80     </font></a><span class="comment"> * serialize the processor, which could give wrong timings when</span>
+<a name="81"><font size=-1>81     </font></a><span class="comment"> * profiling very short code fragments.</span>
+<a name="82"><font size=-1>82     </font></a><span class="comment"> * Problematic is that some power sensitive devices</span>
+<a name="83"><font size=-1>83     </font></a><span class="comment"> * (laptops for example, but probably also embedded devices),</span>
+<a name="84"><font size=-1>84     </font></a><span class="comment"> * do change the cycle rate while running.</span>
+<a name="85"><font size=-1>85     </font></a><span class="comment"> * Some pentiums can run on (at least) two clock frequency's.</span>
+<a name="86"><font size=-1>86     </font></a><span class="comment"> * Another problem arises with multiprocessor computers, there</span>
+<a name="87"><font size=-1>87     </font></a><span class="comment"> * are reports that the different RDTSC's are not always kept</span>
+<a name="88"><font size=-1>88     </font></a><span class="comment"> * in sync.</span>
+<a name="89"><font size=-1>89     </font></a><span class="comment"> * A windows &quot;timer chip&quot; NOTE: (8254-compatible real-time clock)</span>
+<a name="90"><font size=-1>90     </font></a><span class="comment"> * When ::QueryPerformanceCounter() uses the 8254 it has a</span>
+<a name="91"><font size=-1>91     </font></a><span class="comment"> * frequency off about 1.193 Mhz (or sometimes 3.579 Mhz?) and</span>
+<a name="92"><font size=-1>92     </font></a><span class="comment"> * reading it requires some time (several thousand cycles).</span>
+<a name="93"><font size=-1>93     </font></a><span class="comment"> */</span>
+<a name="94"><font size=-1>94     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#2975">ACE_High_Res_Timer</a></span>
+<a name="95"><font size=-1>95     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="96"><font size=-1>96     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="97"><font size=-1>97     </font></a><span class="default"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#38">ACE_WIN32</a>)</span>
+<a name="98"><font size=-1>98     </font></a><span class="default">   </span><span class="keyword">typedef <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_G.html#2993">global_scale_factor_type</a></span><span class="default">;</span>
+<a name="99"><font size=-1>99     </font></a><span class="default"></span><span class="preproc">#else</span>
+<a name="100"><font size=-1>100     </font></a><span class="preproc">   </span><span class="keyword">typedef </span><span class="default">ACE_UINT64 global_scale_factor_type;</span>
+<a name="101"><font size=-1>101     </font></a><span class="default"></span><span class="preproc">#endif</span>
+<a name="102"><font size=-1>102     </font></a><span class="preproc"></span>
+<a name="103"><font size=-1>103     </font></a><span class="preproc">  </span><span class="comment">/**</span>
+<a name="104"><font size=-1>104     </font></a><span class="comment">   * global_scale_factor_ is set to @a gsf.  All High_Res_Timers use</span>
+<a name="105"><font size=-1>105     </font></a><span class="comment">   * global_scale_factor_.  This allows applications to set the scale</span>
+<a name="106"><font size=-1>106     </font></a><span class="comment">   * factor just once for all High_Res_Timers.  Check</span>
+<a name="107"><font size=-1>107     </font></a><span class="comment">   *  High_Res_Timer.cpp for the default global_scale_factors for</span>
+<a name="108"><font size=-1>108     </font></a><span class="comment">   * several platforms.  For many platforms the</span>
+<a name="109"><font size=-1>109     </font></a><span class="comment">   * global_scale_factor_ is set to 1000 so that &lt;scale_factor&gt; need</span>
+<a name="110"><font size=-1>110     </font></a><span class="comment">   * not be set.  Careful, a &lt;scale_factor&gt; of 0 will cause division</span>
+<a name="111"><font size=-1>111     </font></a><span class="comment">   * by zero exceptions.</span>
+<a name="112"><font size=-1>112     </font></a><span class="comment">   * Depending on the platform its units are 1/microsecond or</span>
+<a name="113"><font size=-1>113     </font></a><span class="comment">   * 1/millisecond. Use @c ACE_HR_SCALE_CONVERSION inside calculations</span>
+<a name="114"><font size=-1>114     </font></a><span class="comment">   * instead a hardcoded value.</span>
+<a name="115"><font size=-1>115     </font></a><span class="comment">   */</span>
+<a name="116"><font size=-1>116     </font></a><span class="comment">  </span><span class="keyword">static void <a href="dictionary_G.html#2990">global_scale_factor</a> </span><span class="default">(<a href="dictionary_G.html#2993">global_scale_factor_type</a> <a href="dictionary_G.html#2991">gsf</a>);</span>
+<a name="117"><font size=-1>117     </font></a><span class="default"></span>
+<a name="118"><font size=-1>118     </font></a><span class="default">  </span><span class="comment">/// Returns the global_scale_factor.</span>
+<a name="119"><font size=-1>119     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_G.html#2993">global_scale_factor_type</a> <a href="dictionary_G.html#2989">global_scale_factor</a> </span><span class="default">();</span>
+<a name="120"><font size=-1>120     </font></a><span class="default"></span>
+<a name="121"><font size=-1>121     </font></a><span class="default"></span><span class="preproc">#ifndef  <a href="dictionary_A.html#2974">ACE_HR_SCALE_CONVERSION</a></span>
+<a name="122"><font size=-1>122     </font></a><span class="preproc">#  define <a href="dictionary_A.html#2974">ACE_HR_SCALE_CONVERSION</a> </span><span class="default">(ACE_ONE_SECOND_IN_USECS)</span>
+<a name="123"><font size=-1>123     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HR_SCALE_CONVERSION */</span>
+<a name="124"><font size=-1>124     </font></a><span class="comment"></span>
+<a name="125"><font size=-1>125     </font></a><span class="comment">  /**</span>
+<a name="126"><font size=-1>126     </font></a><span class="comment">   * Sets the global_scale_factor to the value in the @a env</span>
+<a name="127"><font size=-1>127     </font></a><span class="comment">   * environment variable.  Returns 0 on success, -1 on failure.</span>
+<a name="128"><font size=-1>128     </font></a><span class="comment">   * @note If @a env points to string &quot;0&quot; (value zero), this call will fail.</span>
+<a name="129"><font size=-1>129     </font></a><span class="comment">   * This is basically a no-op on CE because there is no concept of</span>
+<a name="130"><font size=-1>130     </font></a><span class="comment">   * environment variable on CE.</span>
+<a name="131"><font size=-1>131     </font></a><span class="comment">   */</span>
+<a name="132"><font size=-1>132     </font></a><span class="comment">  </span><span class="keyword">static int <a href="dictionary_G.html#8327">get_env_global_scale_factor</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_E.html#8328">env</a></span>
+<a name="133"><font size=-1>133     </font></a><span class="default">                                          = <a href="dictionary_A.html#719">ACE_TEXT</a> (</span><span class="string">&quot;ACE_SCALE_FACTOR&quot;</span><span class="default">));</span>
+<a name="134"><font size=-1>134     </font></a><span class="default"></span>
+<a name="135"><font size=-1>135     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="136"><font size=-1>136     </font></a><span class="comment">   * Set (and return, for info) the global scale factor by sleeping</span>
+<a name="137"><font size=-1>137     </font></a><span class="comment">   * for @a usec and counting the number of intervening clock cycles.</span>
+<a name="138"><font size=-1>138     </font></a><span class="comment">   * Average over @a iterations of @a usec each.  On some platforms,</span>
+<a name="139"><font size=-1>139     </font></a><span class="comment">   * such as Pentiums, this is called automatically during the first</span>
+<a name="140"><font size=-1>140     </font></a><span class="comment">   * ACE_High_Res_Timer construction with the default parameter</span>
+<a name="141"><font size=-1>141     </font></a><span class="comment">   * values.  An application can override that by calling calibrate</span>
+<a name="142"><font size=-1>142     </font></a><span class="comment">   * with any desired parameter values _prior_ to constructing the</span>
+<a name="143"><font size=-1>143     </font></a><span class="comment">   * first ACE_High_Res_Timer instance.</span>
+<a name="144"><font size=-1>144     </font></a><span class="comment">   * Beware for platforms that can change the cycle rate on the fly.</span>
+<a name="145"><font size=-1>145     </font></a><span class="comment">   */</span>
+<a name="146"><font size=-1>146     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_C.html#8312">calibrate</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_U.html#8314">usec</a> </span><span class="default">= </span><span class="number">500000</span><span class="default">,</span>
+<a name="147"><font size=-1>147     </font></a><span class="default">                               </span><span class="keyword">const <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_I.html#8313">iterations</a> </span><span class="default">= </span><span class="number">10</span><span class="default">);</span>
+<a name="148"><font size=-1>148     </font></a><span class="default"></span>
+<a name="149"><font size=-1>149     </font></a><span class="default">  </span><span class="comment">/// Initialize the timer.</span>
+<a name="150"><font size=-1>150     </font></a><span class="comment">  <a href="dictionary_A.html#8310">ACE_High_Res_Timer</a> </span><span class="default">();</span>
+<a name="151"><font size=-1>151     </font></a><span class="default"></span>
+<a name="152"><font size=-1>152     </font></a><span class="default">  </span><span class="comment">/// Destructor.</span>
+<a name="153"><font size=-1>153     </font></a><span class="comment">  </span><span class="default">~<a href="dictionary_A.html#3009">ACE_High_Res_Timer</a> ();</span>
+<a name="154"><font size=-1>154     </font></a><span class="default"></span>
+<a name="155"><font size=-1>155     </font></a><span class="default">  </span><span class="comment">/// Reinitialize the timer.</span>
+<a name="156"><font size=-1>156     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_R.html#8338">reset</a> </span><span class="default">();</span>
+<a name="157"><font size=-1>157     </font></a><span class="default"></span>
+<a name="158"><font size=-1>158     </font></a><span class="default">  </span><span class="comment">/// Start timing.</span>
+<a name="159"><font size=-1>159     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_S.html#2998">start</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">ACE_OS::<a href="dictionary_A.html#3011">ACE_HRTimer_Op</a> = ACE_OS::ACE_HRTIMER_GETTIME);</span>
+<a name="160"><font size=-1>160     </font></a><span class="default"></span>
+<a name="161"><font size=-1>161     </font></a><span class="default">  </span><span class="comment">/// Stop timing.</span>
+<a name="162"><font size=-1>162     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_S.html#3004">stop</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">ACE_OS::<a href="dictionary_A.html#3011">ACE_HRTimer_Op</a> = ACE_OS::ACE_HRTIMER_GETTIME);</span>
+<a name="163"><font size=-1>163     </font></a><span class="default"></span>
+<a name="164"><font size=-1>164     </font></a><span class="default">  </span><span class="comment">/// Set @a tv to the number of microseconds elapsed.</span>
+<a name="165"><font size=-1>165     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_E.html#8316">elapsed_time</a> </span><span class="default">(<a href="dictionary_A.html#718">ACE_Time_Value</a> &amp;<a href="dictionary_T.html#8317">tv</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="166"><font size=-1>166     </font></a><span class="default"></span>
+<a name="167"><font size=-1>167     </font></a><span class="default">  </span><span class="comment">/// Set @a nanoseconds to the number of nanoseconds elapsed.</span>
+<a name="168"><font size=-1>168     </font></a><span class="comment">  /**</span>
+<a name="169"><font size=-1>169     </font></a><span class="comment">   *  Will overflow when measuring more than 194 day's.</span>
+<a name="170"><font size=-1>170     </font></a><span class="comment">   */</span>
+<a name="171"><font size=-1>171     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_E.html#8318">elapsed_time</a> </span><span class="default">(<a href="dictionary_A.html#3010">ACE_hrtime_t</a> &amp;<a href="dictionary_N.html#8319">nanoseconds</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="172"><font size=-1>172     </font></a><span class="default"></span>
+<a name="173"><font size=-1>173     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#3614">ACE_HAS_POSIX_TIME</a>)</span>
+<a name="174"><font size=-1>174     </font></a><span class="default">  </span><span class="comment">/// Returns the elapsed (stop - start) time in a struct timespec</span>
+<a name="175"><font size=-1>175     </font></a><span class="comment">  /// (sec, nsec).</span>
+<a name="176"><font size=-1>176     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_E.html#8320">elapsed_time</a> </span><span class="default">(</span><span class="keyword">struct </span><span class="default">timespec &amp;) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="177"><font size=-1>177     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_POSIX_TIME */</span>
+<a name="178"><font size=-1>178     </font></a><span class="comment"></span>
+<a name="179"><font size=-1>179     </font></a><span class="comment">  /// Sets @a usecs to the elapsed (stop - start) time in microseconds.</span>
+<a name="180"><font size=-1>180     </font></a><span class="comment">  /**</span>
+<a name="181"><font size=-1>181     </font></a><span class="comment">   *  Will overflow on windows when measuring more than appox. 2^^54 ticks.</span>
+<a name="182"><font size=-1>182     </font></a><span class="comment">   *  Is still more than 48 days with a 4 Ghz counter.</span>
+<a name="183"><font size=-1>183     </font></a><span class="comment">   */</span>
+<a name="184"><font size=-1>184     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_E.html#2979">elapsed_microseconds</a> </span><span class="default">(<a href="dictionary_A.html#3010">ACE_hrtime_t</a> &amp;<a href="dictionary_U.html#2981">usecs</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="185"><font size=-1>185     </font></a><span class="default"></span>
+<a name="186"><font size=-1>186     </font></a><span class="default">  </span><span class="comment">/// Start incremental timing.</span>
+<a name="187"><font size=-1>187     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_S.html#3001">start_incr</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">ACE_OS::<a href="dictionary_A.html#3011">ACE_HRTimer_Op</a> = ACE_OS::ACE_HRTIMER_GETTIME);</span>
+<a name="188"><font size=-1>188     </font></a><span class="default"></span>
+<a name="189"><font size=-1>189     </font></a><span class="default">  </span><span class="comment">/// Stop incremental timing.</span>
+<a name="190"><font size=-1>190     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_S.html#3006">stop_incr</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">ACE_OS::<a href="dictionary_A.html#3011">ACE_HRTimer_Op</a> = ACE_OS::ACE_HRTIMER_GETTIME);</span>
+<a name="191"><font size=-1>191     </font></a><span class="default"></span>
+<a name="192"><font size=-1>192     </font></a><span class="default">  </span><span class="comment">/// Set @a tv to the number of microseconds elapsed between all calls</span>
+<a name="193"><font size=-1>193     </font></a><span class="comment">  /// to start_incr and stop_incr.</span>
+<a name="194"><font size=-1>194     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_E.html#8322">elapsed_time_incr</a> </span><span class="default">(<a href="dictionary_A.html#718">ACE_Time_Value</a> &amp;<a href="dictionary_T.html#8323">tv</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="195"><font size=-1>195     </font></a><span class="default"></span>
+<a name="196"><font size=-1>196     </font></a><span class="default">  </span><span class="comment">/// Set @a nanoseconds to the number of nanoseconds elapsed between all calls</span>
+<a name="197"><font size=-1>197     </font></a><span class="comment">  /// to start_incr and stop_incr.</span>
+<a name="198"><font size=-1>198     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_E.html#8324">elapsed_time_incr</a> </span><span class="default">(<a href="dictionary_A.html#3010">ACE_hrtime_t</a> &amp;<a href="dictionary_N.html#8325">nanoseconds</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="199"><font size=-1>199     </font></a><span class="default"></span>
+<a name="200"><font size=-1>200     </font></a><span class="default">  </span><span class="comment">/// Print total time.</span>
+<a name="201"><font size=-1>201     </font></a><span class="comment">  /// @note only use @c print_total if incremental timings had been used!</span>
+<a name="202"><font size=-1>202     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_P.html#8334">print_total</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_M.html#8337">message</a>,</span>
+<a name="203"><font size=-1>203     </font></a><span class="default">                    </span><span class="keyword">const int <a href="dictionary_I.html#8336">iterations</a> </span><span class="default">= </span><span class="number">1</span><span class="default">,</span>
+<a name="204"><font size=-1>204     </font></a><span class="default">                    <a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#8335">handle</a> = <a href="dictionary_A.html#8307">ACE_STDOUT</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="205"><font size=-1>205     </font></a><span class="default"></span>
+<a name="206"><font size=-1>206     </font></a><span class="default">  </span><span class="comment">/// Print average time.</span>
+<a name="207"><font size=-1>207     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_P.html#8330">print_ave</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_M.html#8333">message</a>,</span>
+<a name="208"><font size=-1>208     </font></a><span class="default">                  </span><span class="keyword">const int <a href="dictionary_I.html#8332">iterations</a> </span><span class="default">= </span><span class="number">1</span><span class="default">,</span>
+<a name="209"><font size=-1>209     </font></a><span class="default">                  <a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#8331">handle</a> = <a href="dictionary_A.html#8307">ACE_STDOUT</a>) </span><span class="keyword">const</span><span class="default">;</span>
+<a name="210"><font size=-1>210     </font></a><span class="default"></span>
+<a name="211"><font size=-1>211     </font></a><span class="default">  </span><span class="comment">/// Dump the state of an object.</span>
+<a name="212"><font size=-1>212     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_D.html#8315">dump</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="213"><font size=-1>213     </font></a><span class="default"></span>
+<a name="214"><font size=-1>214     </font></a><span class="default">  </span><span class="comment">/// Declare the dynamic allocation hooks.</span>
+<a name="215"><font size=-1>215     </font></a><span class="comment">  <a href="dictionary_A.html#408">ACE_ALLOC_HOOK_DECLARE</a></span><span class="default">;</span>
+<a name="216"><font size=-1>216     </font></a><span class="default"></span>
+<a name="217"><font size=-1>217     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="218"><font size=-1>218     </font></a><span class="comment">   * Get the current &quot;time&quot; as the high resolution counter at this time.</span>
+<a name="219"><font size=-1>219     </font></a><span class="comment">   * This is intended to be useful for supplying to a ACE_Timer_Queue</span>
+<a name="220"><font size=-1>220     </font></a><span class="comment">   * as the gettimeofday function, thereby basing the timer calculations</span>
+<a name="221"><font size=-1>221     </font></a><span class="comment">   * on the high res timer rather than wall clock time.</span>
+<a name="222"><font size=-1>222     </font></a><span class="comment">   */</span>
+<a name="223"><font size=-1>223     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#718">ACE_Time_Value</a> <a href="dictionary_G.html#2988">gettimeofday_hr</a> </span><span class="default">();</span>
+<a name="224"><font size=-1>224     </font></a><span class="default"></span>
+<a name="225"><font size=-1>225     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="226"><font size=-1>226     </font></a><span class="comment">   * @deprecated THIS FUNCTION IS DEPRECATED.  PLEASE USE</span>
+<a name="227"><font size=-1>227     </font></a><span class="comment">   * &lt;ACE_OS::gettimeofday&gt; INSTEAD!  Calls &lt;ACE_High_Res_Timer::hrtime_to_tv&gt;</span>
+<a name="228"><font size=-1>228     </font></a><span class="comment">   * passing &lt;ACE_OS::gethrtime&gt;.  This function can be used to parameterize</span>
+<a name="229"><font size=-1>229     </font></a><span class="comment">   * objects such as &lt;ACE_Timer_Queue::gettimeofday&gt;.  If</span>
+<a name="230"><font size=-1>230     </font></a><span class="comment">   * &lt;global_scale_factor_&gt; is not set, and we're on a platform that</span>
+<a name="231"><font size=-1>231     </font></a><span class="comment">   * requires &lt;global_scale_factor_&gt; (e.g., Win32),</span>
+<a name="232"><font size=-1>232     </font></a><span class="comment">   * ACE_OS::gettimeofday will be used instead of &lt;ACE_OS::gethrtime&gt;.</span>
+<a name="233"><font size=-1>233     </font></a><span class="comment">   * This allows applications on Intel to use &lt;High_Res_Timer&gt; even</span>
+<a name="234"><font size=-1>234     </font></a><span class="comment">   * when &lt;global_scale_factor&gt; is not set.  However, setting the</span>
+<a name="235"><font size=-1>235     </font></a><span class="comment">   * &lt;global_scale_factor_&gt; appropriately will result in the finest</span>
+<a name="236"><font size=-1>236     </font></a><span class="comment">   * resolution possible.</span>
+<a name="237"><font size=-1>237     </font></a><span class="comment">   */</span>
+<a name="238"><font size=-1>238     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#718">ACE_Time_Value</a> <a href="dictionary_G.html#2985">gettimeofday</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">ACE_OS::<a href="dictionary_A.html#3011">ACE_HRTimer_Op</a> =</span>
+<a name="239"><font size=-1>239     </font></a><span class="default">                                        ACE_OS::ACE_HRTIMER_GETTIME);</span>
+<a name="240"><font size=-1>240     </font></a><span class="default"></span>
+<a name="241"><font size=-1>241     </font></a><span class="default">  </span><span class="comment">/// Converts an @a hrt to @a tv using global_scale_factor_.</span>
+<a name="242"><font size=-1>242     </font></a><span class="comment">  </span><span class="keyword">static void <a href="dictionary_H.html#2994">hrtime_to_tv</a> </span><span class="default">(<a href="dictionary_A.html#718">ACE_Time_Value</a> &amp;<a href="dictionary_T.html#2997">tv</a>,</span>
+<a name="243"><font size=-1>243     </font></a><span class="default">                            </span><span class="keyword">const <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_H.html#2995">hrt</a></span><span class="default">);</span>
+<a name="244"><font size=-1>244     </font></a><span class="default"></span>
+<a name="245"><font size=-1>245     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#5616">ACE_LINUX</a>) &amp;&amp; !</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8339">ACE_LACKS_SSCANF</a>)</span>
+<a name="246"><font size=-1>246     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="247"><font size=-1>247     </font></a><span class="comment">   * This is used to find out the Mhz of the machine for the scale</span>
+<a name="248"><font size=-1>248     </font></a><span class="comment">   * factor.  If there are any problems getting it, we just return 1</span>
+<a name="249"><font size=-1>249     </font></a><span class="comment">   * (the default).</span>
+<a name="250"><font size=-1>250     </font></a><span class="comment">   */</span>
+<a name="251"><font size=-1>251     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_G.html#8326">get_cpuinfo</a> </span><span class="default">();</span>
+<a name="252"><font size=-1>252     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* defined (ACE_LINUX) &amp;&amp; !ACE_LACKS_SSCANF */</span>
+<a name="253"><font size=-1>253     </font></a><span class="comment"></span>
+<a name="254"><font size=-1>254     </font></a><span class="comment"></span><span class="keyword">private</span><span class="default">:</span>
+<a name="255"><font size=-1>255     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="256"><font size=-1>256     </font></a><span class="comment">   * For internal use: gets the high-resolution time using</span>
+<a name="257"><font size=-1>257     </font></a><span class="comment">   * &lt;ACE_OS::gethrtime&gt;.  Except on platforms that require that the</span>
+<a name="258"><font size=-1>258     </font></a><span class="comment">   * &lt;global_scale_factor_&gt; be set, such as ACE_WIN32, uses the</span>
+<a name="259"><font size=-1>259     </font></a><span class="comment">   * low-resolution clock if the &lt;global_scale_factor_&gt; has not been</span>
+<a name="260"><font size=-1>260     </font></a><span class="comment">   * set.</span>
+<a name="261"><font size=-1>261     </font></a><span class="comment">   */</span>
+<a name="262"><font size=-1>262     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_G.html#2983">gettime</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">ACE_OS::<a href="dictionary_A.html#3011">ACE_HRTimer_Op</a> =</span>
+<a name="263"><font size=-1>263     </font></a><span class="default">                                 ACE_OS::ACE_HRTIMER_GETTIME);</span>
+<a name="264"><font size=-1>264     </font></a><span class="default"></span>
+<a name="265"><font size=-1>265     </font></a><span class="default">  </span><span class="comment">/// Calculate the difference between two ACE_hrtime_t values. It is assumed</span>
+<a name="266"><font size=-1>266     </font></a><span class="comment">  /// that the end time is later than start time, so if end is a smaller</span>
+<a name="267"><font size=-1>267     </font></a><span class="comment">  /// value, the time counter has wrapped around.</span>
+<a name="268"><font size=-1>268     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_E.html#2976">elapsed_hrtime</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_E.html#2977">end</a></span><span class="default">,</span>
+<a name="269"><font size=-1>269     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_S.html#2978">start</a></span><span class="default">);</span>
+<a name="270"><font size=-1>270     </font></a><span class="default"></span>
+<a name="271"><font size=-1>271     </font></a><span class="default">  </span><span class="comment">/// Starting time.</span>
+<a name="272"><font size=-1>272     </font></a><span class="comment">  <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_S.html#3000">start_</a></span><span class="default">;</span>
+<a name="273"><font size=-1>273     </font></a><span class="default"></span>
+<a name="274"><font size=-1>274     </font></a><span class="default">  </span><span class="comment">/// Ending time.</span>
+<a name="275"><font size=-1>275     </font></a><span class="comment">  <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_E.html#2982">end_</a></span><span class="default">;</span>
+<a name="276"><font size=-1>276     </font></a><span class="default"></span>
+<a name="277"><font size=-1>277     </font></a><span class="default">  </span><span class="comment">/// Total elapsed time.</span>
+<a name="278"><font size=-1>278     </font></a><span class="comment">  <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_T.html#3008">total_</a></span><span class="default">;</span>
+<a name="279"><font size=-1>279     </font></a><span class="default"></span>
+<a name="280"><font size=-1>280     </font></a><span class="default">  </span><span class="comment">/// Start time of incremental timing.</span>
+<a name="281"><font size=-1>281     </font></a><span class="comment">  <a href="dictionary_A.html#3010">ACE_hrtime_t</a> <a href="dictionary_S.html#3003">start_incr_</a></span><span class="default">;</span>
+<a name="282"><font size=-1>282     </font></a><span class="default"></span>
+<a name="283"><font size=-1>283     </font></a><span class="default">  </span><span class="comment">/// Converts ticks to microseconds.  That is, ticks /</span>
+<a name="284"><font size=-1>284     </font></a><span class="comment">  /// global_scale_factor_ == microseconds.</span>
+<a name="285"><font size=-1>285     </font></a><span class="comment">  </span><span class="keyword">static <a href="dictionary_G.html#2993">global_scale_factor_type</a> <a href="dictionary_G.html#2992">global_scale_factor_</a></span><span class="default">;</span>
+<a name="286"><font size=-1>286     </font></a><span class="default"></span>
+<a name="287"><font size=-1>287     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="288"><font size=-1>288     </font></a><span class="comment">   * Indicates the status of the global scale factor,</span>
+<a name="289"><font size=-1>289     </font></a><span class="comment">   * 0  = hasn't been set</span>
+<a name="290"><font size=-1>290     </font></a><span class="comment">   * 1  = been set</span>
+<a name="291"><font size=-1>291     </font></a><span class="comment">   * -1 = HR timer not supported</span>
+<a name="292"><font size=-1>292     </font></a><span class="comment">   */</span>
+<a name="293"><font size=-1>293     </font></a><span class="comment">  </span><span class="keyword">static int <a href="dictionary_G.html#8329">global_scale_factor_status_</a></span><span class="default">;</span>
+<a name="294"><font size=-1>294     </font></a><span class="default">};</span>
+<a name="295"><font size=-1>295     </font></a><span class="default"></span>
+<a name="296"><font size=-1>296     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="297"><font size=-1>297     </font></a><span class="default"></span>
+<a name="298"><font size=-1>298     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_&.html#302">__ACE_INLINE__</a>)</span>
+<a name="299"><font size=-1>299     </font></a><span class="default"></span><span class="preproc">#include </span><span class="string">&quot;ace/High_Res_Timer.inl&quot;</span>
+<a name="300"><font size=-1>300     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* __ACE_INLINE__ */</span>
+<a name="301"><font size=-1>301     </font></a><span class="comment"></span>
+<a name="302"><font size=-1>302     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="303"><font size=-1>303     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HIGH_RES_TIMER_H */</span>
+<a name="304"><font size=-1>304     </font></a><span class="comment"></span>
+</pre></body></html>

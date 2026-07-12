@@ -1,6 +1,5 @@
 #include "TaskOrchestrator.hxx"
 #include "Config.hxx"
-#include <ace/OS_NS_stdio.h>
 
 namespace Manager
 {

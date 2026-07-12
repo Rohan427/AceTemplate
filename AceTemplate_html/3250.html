@@ -1,0 +1,152 @@
+<html><head><title>Condition_Thread_Mutex.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Condition_Thread_Mutex.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Condition_Thread_Mutex.h";
+top.document.title  = "Condition_Thread_Mutex.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//==========================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> *  @file    Condition_Thread_Mutex.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> *  @author Douglas C. Schmidt &lt;d.schmidt@vanderbilt.edu&gt;</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> */</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment">//==========================================================================</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"></span>
+<a name="11"><font size=-1>11     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#10901">ACE_CONDITION_THREAD_MUTEX_H</a></span>
+<a name="12"><font size=-1>12     </font></a><span class="preproc">#define <a href="dictionary_A.html#10901">ACE_CONDITION_THREAD_MUTEX_H</a></span>
+<a name="13"><font size=-1>13     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="14"><font size=-1>14     </font></a><span class="string"></span>
+<a name="15"><font size=-1>15     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/ACE_export.h&quot;</span>
+<a name="16"><font size=-1>16     </font></a><span class="string"></span>
+<a name="17"><font size=-1>17     </font></a><span class="string"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#26">ACE_LACKS_PRAGMA_ONCE</a>)</span>
+<a name="18"><font size=-1>18     </font></a><span class="default"></span><span class="preproc"># pragma </span><span class="default">once</span>
+<a name="19"><font size=-1>19     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_PRAGMA_ONCE */</span>
+<a name="20"><font size=-1>20     </font></a><span class="comment"></span>
+<a name="21"><font size=-1>21     </font></a><span class="comment"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#741">ACE_HAS_THREADS</a>)</span>
+<a name="22"><font size=-1>22     </font></a><span class="default"></span><span class="preproc">#  include </span><span class="string">&quot;ace/Null_Condition.h&quot;</span>
+<a name="23"><font size=-1>23     </font></a><span class="string"></span><span class="preproc">#else </span><span class="comment">/* ACE_HAS_THREADS */</span>
+<a name="24"><font size=-1>24     </font></a><span class="comment">// ACE platform supports some form of threading.</span>
+<a name="25"><font size=-1>25     </font></a><span class="comment"></span>
+<a name="26"><font size=-1>26     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/Thread_Mutex.h&quot;</span>
+<a name="27"><font size=-1>27     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/Condition_Attributes.h&quot;</span>
+<a name="28"><font size=-1>28     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/Condition_T.h&quot;</span>
+<a name="29"><font size=-1>29     </font></a><span class="string"></span>
+<a name="30"><font size=-1>30     </font></a><span class="string"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="31"><font size=-1>31     </font></a><span class="string"></span>
+<a name="32"><font size=-1>32     </font></a><span class="string"></span><span class="keyword">class <a href="dictionary_A.html#718">ACE_Time_Value</a></span><span class="default">;</span>
+<a name="33"><font size=-1>33     </font></a><span class="default"></span>
+<a name="34"><font size=-1>34     </font></a><span class="default"></span><span class="comment">/**</span>
+<a name="35"><font size=-1>35     </font></a><span class="comment"> * @brief ACE_Condition template specialization written using</span>
+<a name="36"><font size=-1>36     </font></a><span class="comment"> * ACE_Mutexes. This allows threads to block until shared data</span>
+<a name="37"><font size=-1>37     </font></a><span class="comment"> * changes state.</span>
+<a name="38"><font size=-1>38     </font></a><span class="comment"> * A condition variable enables threads to atomically block and</span>
+<a name="39"><font size=-1>39     </font></a><span class="comment"> * test the condition under the protection of a mutual exclu-</span>
+<a name="40"><font size=-1>40     </font></a><span class="comment"> * sion lock (mutex) until the condition is satisfied.  That is,</span>
+<a name="41"><font size=-1>41     </font></a><span class="comment"> * the mutex must have been held by the thread before calling</span>
+<a name="42"><font size=-1>42     </font></a><span class="comment"> * wait or signal on the condition.  If the condition is false,</span>
+<a name="43"><font size=-1>43     </font></a><span class="comment"> * a thread blocks on a condition variable and atomically</span>
+<a name="44"><font size=-1>44     </font></a><span class="comment"> * releases the mutex that is waiting for the condition to</span>
+<a name="45"><font size=-1>45     </font></a><span class="comment"> * change.  If another thread changes the condition, it may wake</span>
+<a name="46"><font size=-1>46     </font></a><span class="comment"> * up waiting threads by signaling the associated condition</span>
+<a name="47"><font size=-1>47     </font></a><span class="comment"> * variable.  The waiting threads, upon awakening, reacquire the</span>
+<a name="48"><font size=-1>48     </font></a><span class="comment"> * mutex and re-evaluate the condition.</span>
+<a name="49"><font size=-1>49     </font></a><span class="comment"> */</span>
+<a name="50"><font size=-1>50     </font></a><span class="comment"></span><span class="keyword">template </span><span class="default">&lt;&gt;</span>
+<a name="51"><font size=-1>51     </font></a><span class="default"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#10902">ACE_Condition</a></span><span class="default">&lt;<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a>&gt;</span>
+<a name="52"><font size=-1>52     </font></a><span class="default">{</span>
+<a name="53"><font size=-1>53     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="54"><font size=-1>54     </font></a><span class="default">  </span><span class="comment">/// Initialize the condition variable.</span>
+<a name="55"><font size=-1>55     </font></a><span class="comment">  <a href="dictionary_A.html#10903">ACE_Condition</a> </span><span class="default">(<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a> &amp;<a href="dictionary_M.html#10905">m</a>,</span>
+<a name="56"><font size=-1>56     </font></a><span class="default">                 </span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_N.html#10906">name</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="57"><font size=-1>57     </font></a><span class="default">                 </span><span class="keyword">void </span><span class="default">*<a href="dictionary_A.html#10904">arg</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="58"><font size=-1>58     </font></a><span class="default"></span>
+<a name="59"><font size=-1>59     </font></a><span class="default">  </span><span class="comment">/// Initialize the condition variable.</span>
+<a name="60"><font size=-1>60     </font></a><span class="comment">  <a href="dictionary_A.html#10907">ACE_Condition</a> </span><span class="default">(<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a> &amp;<a href="dictionary_M.html#10910">m</a>,</span>
+<a name="61"><font size=-1>61     </font></a><span class="default">                 </span><span class="keyword">const <a href="dictionary_A.html#8065">ACE_Condition_Attributes</a> </span><span class="default">&amp;<a href="dictionary_A.html#10909">attributes</a>,</span>
+<a name="62"><font size=-1>62     </font></a><span class="default">                 </span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_N.html#10911">name</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="63"><font size=-1>63     </font></a><span class="default">                 </span><span class="keyword">void </span><span class="default">*<a href="dictionary_A.html#10908">arg</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="64"><font size=-1>64     </font></a><span class="default"></span>
+<a name="65"><font size=-1>65     </font></a><span class="default">  </span><span class="comment">/// Implicitly destroy the condition variable.</span>
+<a name="66"><font size=-1>66     </font></a><span class="comment">  </span><span class="default">~<a href="dictionary_A.html#10929">ACE_Condition</a> ();</span>
+<a name="67"><font size=-1>67     </font></a><span class="default"></span>
+<a name="68"><font size=-1>68     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="69"><font size=-1>69     </font></a><span class="comment">   * Explicitly destroy the condition variable.  Note that only one</span>
+<a name="70"><font size=-1>70     </font></a><span class="comment">   * thread should call this method since it doesn't protect against</span>
+<a name="71"><font size=-1>71     </font></a><span class="comment">   * race conditions.</span>
+<a name="72"><font size=-1>72     </font></a><span class="comment">   */</span>
+<a name="73"><font size=-1>73     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_R.html#10920">remove</a> </span><span class="default">();</span>
+<a name="74"><font size=-1>74     </font></a><span class="default"></span>
+<a name="75"><font size=-1>75     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="76"><font size=-1>76     </font></a><span class="comment">   * Block on condition, or until absolute time-of-day has passed.  If</span>
+<a name="77"><font size=-1>77     </font></a><span class="comment">   * abstime == 0 use &quot;blocking&quot; wait semantics.  Else, if @a abstime</span>
+<a name="78"><font size=-1>78     </font></a><span class="comment">   * != 0 and the call times out before the condition is signaled</span>
+<a name="79"><font size=-1>79     </font></a><span class="comment">   * wait() returns -1 and sets errno to ETIME.</span>
+<a name="80"><font size=-1>80     </font></a><span class="comment">   */</span>
+<a name="81"><font size=-1>81     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_W.html#10923">wait</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_A.html#10924">abstime</a>);</span>
+<a name="82"><font size=-1>82     </font></a><span class="default"></span>
+<a name="83"><font size=-1>83     </font></a><span class="default">  </span><span class="comment">/// Block on condition.</span>
+<a name="84"><font size=-1>84     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_W.html#10925">wait</a> </span><span class="default">();</span>
+<a name="85"><font size=-1>85     </font></a><span class="default"></span>
+<a name="86"><font size=-1>86     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="87"><font size=-1>87     </font></a><span class="comment">   * Block on condition or until absolute time-of-day has passed.  If</span>
+<a name="88"><font size=-1>88     </font></a><span class="comment">   * abstime == 0 use &quot;blocking&quot; wait() semantics on the @a mutex</span>
+<a name="89"><font size=-1>89     </font></a><span class="comment">   * passed as a parameter (this is useful if you need to store the</span>
+<a name="90"><font size=-1>90     </font></a><span class="comment">   * &lt;Condition&gt; in shared memory).  Else, if @a abstime != 0 and the</span>
+<a name="91"><font size=-1>91     </font></a><span class="comment">   * call times out before the condition is signaled &lt;wait&gt; returns -1</span>
+<a name="92"><font size=-1>92     </font></a><span class="comment">   * and sets errno to ETIME.</span>
+<a name="93"><font size=-1>93     </font></a><span class="comment">   */</span>
+<a name="94"><font size=-1>94     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_W.html#10926">wait</a> </span><span class="default">(<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a> &amp;<a href="dictionary_M.html#10928">mutex</a>, </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_A.html#10927">abstime</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="95"><font size=-1>95     </font></a><span class="default"></span>
+<a name="96"><font size=-1>96     </font></a><span class="default">  </span><span class="comment">/// Signal one waiting thread.</span>
+<a name="97"><font size=-1>97     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_S.html#10922">signal</a> </span><span class="default">();</span>
+<a name="98"><font size=-1>98     </font></a><span class="default"></span>
+<a name="99"><font size=-1>99     </font></a><span class="default">  </span><span class="comment">/// Signal *all* waiting threads.</span>
+<a name="100"><font size=-1>100     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_B.html#10915">broadcast</a> </span><span class="default">();</span>
+<a name="101"><font size=-1>101     </font></a><span class="default"></span>
+<a name="102"><font size=-1>102     </font></a><span class="default">  </span><span class="comment">/// Returns a reference to the underlying mutex;</span>
+<a name="103"><font size=-1>103     </font></a><span class="comment">  <a href="dictionary_A.html#3252">ACE_Thread_Mutex</a> </span><span class="default">&amp;<a href="dictionary_M.html#10917">mutex</a> ();</span>
+<a name="104"><font size=-1>104     </font></a><span class="default"></span>
+<a name="105"><font size=-1>105     </font></a><span class="default">  </span><span class="comment">/// Dump the state of an object.</span>
+<a name="106"><font size=-1>106     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_D.html#10916">dump</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="107"><font size=-1>107     </font></a><span class="default"></span>
+<a name="108"><font size=-1>108     </font></a><span class="default">  </span><span class="comment">/// Declare the dynamic allocation hooks.</span>
+<a name="109"><font size=-1>109     </font></a><span class="comment">  <a href="dictionary_A.html#408">ACE_ALLOC_HOOK_DECLARE</a></span><span class="default">;</span>
+<a name="110"><font size=-1>110     </font></a><span class="default"></span>
+<a name="111"><font size=-1>111     </font></a><span class="default"></span><span class="keyword">protected</span><span class="default">:</span>
+<a name="112"><font size=-1>112     </font></a><span class="default">  </span><span class="comment">/// Condition variable.</span>
+<a name="113"><font size=-1>113     </font></a><span class="comment">  <a href="dictionary_A.html#2420">ACE_cond_t</a> <a href="dictionary_C.html#8623">cond_</a></span><span class="default">;</span>
+<a name="114"><font size=-1>114     </font></a><span class="default"></span>
+<a name="115"><font size=-1>115     </font></a><span class="default">  </span><span class="comment">/// Reference to mutex lock.</span>
+<a name="116"><font size=-1>116     </font></a><span class="comment">  <a href="dictionary_A.html#3252">ACE_Thread_Mutex</a> </span><span class="default">&amp;<a href="dictionary_M.html#8625">mutex_</a>;</span>
+<a name="117"><font size=-1>117     </font></a><span class="default"></span>
+<a name="118"><font size=-1>118     </font></a><span class="default">  </span><span class="comment">/// Keeps track of whether remove() has been called yet to avoid</span>
+<a name="119"><font size=-1>119     </font></a><span class="comment">  /// multiple remove() calls, e.g., explicitly and implicitly in the</span>
+<a name="120"><font size=-1>120     </font></a><span class="comment">  /// destructor.  This flag isn't protected by a lock, so make sure</span>
+<a name="121"><font size=-1>121     </font></a><span class="comment">  /// that you don't have multiple threads simultaneously calling</span>
+<a name="122"><font size=-1>122     </font></a><span class="comment">  /// remove() on the same object, which is a bad idea anyway...</span>
+<a name="123"><font size=-1>123     </font></a><span class="comment">  </span><span class="keyword">bool <a href="dictionary_R.html#10921">removed_</a></span><span class="default">;</span>
+<a name="124"><font size=-1>124     </font></a><span class="default"></span>
+<a name="125"><font size=-1>125     </font></a><span class="default"></span><span class="keyword">private</span><span class="default">:</span>
+<a name="126"><font size=-1>126     </font></a><span class="default">  </span><span class="keyword">void operator</span><span class="default">= (</span><span class="keyword">const <a href="dictionary_A.html#4997">ACE_Condition</a></span><span class="default">&lt;<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a>&gt; &amp;) = </span><span class="keyword">delete</span><span class="default">;</span>
+<a name="127"><font size=-1>127     </font></a><span class="default">  <a href="dictionary_A.html#10912">ACE_Condition</a> (</span><span class="keyword">const <a href="dictionary_A.html#4997">ACE_Condition</a></span><span class="default">&lt;<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a>&gt; &amp;) = </span><span class="keyword">delete</span><span class="default">;</span>
+<a name="128"><font size=-1>128     </font></a><span class="default">};</span>
+<a name="129"><font size=-1>129     </font></a><span class="default"></span>
+<a name="130"><font size=-1>130     </font></a><span class="default"></span><span class="keyword">typedef <a href="dictionary_A.html#4997">ACE_Condition</a></span><span class="default">&lt;<a href="dictionary_A.html#3252">ACE_Thread_Mutex</a>&gt; <a href="dictionary_A.html#3251">ACE_Condition_Thread_Mutex</a>;</span>
+<a name="131"><font size=-1>131     </font></a><span class="default"></span>
+<a name="132"><font size=-1>132     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="133"><font size=-1>133     </font></a><span class="default"></span>
+<a name="134"><font size=-1>134     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_&.html#302">__ACE_INLINE__</a>)</span>
+<a name="135"><font size=-1>135     </font></a><span class="default"></span><span class="preproc">#include </span><span class="string">&quot;ace/Condition_Thread_Mutex.inl&quot;</span>
+<a name="136"><font size=-1>136     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* __ACE_INLINE__ */</span>
+<a name="137"><font size=-1>137     </font></a><span class="comment"></span>
+<a name="138"><font size=-1>138     </font></a><span class="comment"></span><span class="preproc">#endif </span><span class="comment">/* !ACE_HAS_THREADS */</span>
+<a name="139"><font size=-1>139     </font></a><span class="comment"></span>
+<a name="140"><font size=-1>140     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="141"><font size=-1>141     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* ACE_CONDITION_THREAD_MUTEX_H */</span>
+<a name="142"><font size=-1>142     </font></a><span class="comment"></span>
+</pre></body></html>

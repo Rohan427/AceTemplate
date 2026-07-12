@@ -9,11 +9,7 @@
 #include "ConfigurableTask.hxx"
 #include "TestTasks.hxx"
 #include <ace/Task.h>
-#include <ace/Barrier.h>
 #include <ace/Thread.h>
-#include <ace/Condition_T.h>
-#include <ace/Thread_Mutex.h>
-#include <ace/OS_NS_stdio.h>
 #include <vector>
 #include "ObjectData.hxx"
 #include "ObjectPool.hxx"
@@ -188,9 +184,9 @@ namespace Manager
             void waitForConsumerCompletion();
 
             // Access to shared pool
-            ObjectPool<std::vector<DT>> *getObjectPool();
+            ObjectPool<std::vector<DT> > *getObjectPool();
 
-            SchedulingTier getSchedulingTier() const
+            int getSchedulingTier() const
             {
                 return m_selectedTier;
             }
@@ -303,12 +299,12 @@ namespace Manager
             static TaskOrchestrator *s_instance;
             static ACE_Thread_Mutex s_creationLock;
 
-            std::vector<ConfigurableTask<DT, IT>*> m_tasks;
-            ObjectPool<std::vector<DT>> m_objectPool;
+            std::vector<ConfigurableTask<DT, IT>* > m_tasks;
+            ObjectPool<std::vector<DT> > m_objectPool;
             bool m_initialized;
             bool m_isValid;
 
-            SchedulingTier m_selectedTier;
+            int m_selectedTier;
             std::vector<HardwareCore> m_hardwarePool;
             size_t m_numThreads;
 

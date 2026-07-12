@@ -1,13 +1,9 @@
 #include "ConfigurableTask.hxx"
 #include "DataProcessor.hxx"
-#include "TaskOrchestrator.hxx"
-#include "Compatibility.hxx"
 #include "Config.hxx"
-#include <ace/OS_NS_unistd.h>
 #include <pthread.h>
 #include <sched.h>
 #include <sys/resource.h>
-#include <ace/OS_NS_stdio.h>
 
 namespace Manager
 {
@@ -54,7 +50,7 @@ namespace Manager
             try
             {
                 int targetCpuId = 0;
-                WorkloadType myWorkload = WorkloadType::PRIMARY_WORKER;
+                int myWorkload = WorkloadType::PRIMARY_WORKER;
 
                 // Dynamically assign thread types based on the application lifecycle allocation
                 // Example: Split pool so higher index blocks handle trajectory predictions
@@ -147,7 +143,7 @@ namespace Manager
         }
 
         // Low-priority producer adjustment
-        if (m_config.role == ROLE_PRODUCER)
+        if (m_config.role == TaskRole::ROLE_PRODUCER)
         {
         // Force lower niceness / priority
 #if defined(__linux__)
@@ -158,7 +154,7 @@ namespace Manager
         // =========================================================================
         // 2. DATA PROCESSING PIPELINE
         // =========================================================================
-        auto lastTickTime = std::chrono::high_resolution_clock::now();
+        ACE_hrtime_t lastTickTime = ACE_OS::gethrtime();
 
         while (!m_done)
         {
@@ -168,7 +164,7 @@ namespace Manager
 
             std::vector<InputT>* currentPtr = m_orchestrator->getSharedDataPtr().value();
 
-            if (m_config.role == ROLE_PRODUCER)
+            if (m_config.role == TaskRole::ROLE_PRODUCER)
             {
 //                ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i.\n"), localThreadId));
 
@@ -193,7 +189,7 @@ namespace Manager
                     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Producer %i not ready\n"), localThreadId));
                 }
             }
-            else if (m_config.role == ROLE_CONSUMER)
+            else if (m_config.role == TaskRole::ROLE_CONSUMER)
             {
                 ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("[%T][%M][TID:%t]: Consumer %i.\n"), localThreadId));
 
@@ -226,7 +222,7 @@ namespace Manager
         } // END-WHILE: while (!m_done)
 
         ACE_DEBUG ((LM_INFO, ACE_TEXT ("[%T][%M][TID:%t] %s Thread %d exiting cleanly\n"),
-                   m_config.role ? ROLE_PRODUCER : ROLE_CONSUMER, localThreadId));
+                   m_config.role ? TaskRole::ROLE_PRODUCER : TaskRole::ROLE_CONSUMER, localThreadId));
 
         return 0;
     }

@@ -23,7 +23,7 @@ namespace Manager
         prodCfg.useRealTime = true;
         prodCfg.intervalMs = 0;
         prodCfg.name = "DataProducer";
-        prodCfg.role = ROLE_PRODUCER;
+        prodCfg.role = TaskRole::ROLE_PRODUCER;
         prodCfg.producerIntervalMs = ::Config::getInstance().UPDATE_INTERVAL;  // 120000 is 2 minutes
         prodCfg.tier = SchedulingTier::RealTimeAndAffinity;
 
@@ -35,7 +35,7 @@ namespace Manager
         consCfg.useRealTime = true;
         consCfg.intervalMs = 0;
         consCfg.name = "DataConsumer";
-        consCfg.role = ROLE_CONSUMER;
+        consCfg.role = TaskRole::ROLE_CONSUMER;
         consCfg.producerIntervalMs = 0;
         consCfg.tier = SchedulingTier::RealTimeAndAffinity;
 

@@ -1,0 +1,902 @@
+<html><head><title>ACE.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/ACE.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/ACE.h";
+top.document.title  = "ACE.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//=============================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> * @file    ACE.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> * This file contains value added ACE functions that extend the</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> * behavior of the UNIX and Win32 OS calls.</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment"> *</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"> * All these ACE static functions are consolidated in a single place</span>
+<a name="11"><font size=-1>11     </font></a><span class="comment"> * in order to manage the namespace better.  These functions are put</span>
+<a name="12"><font size=-1>12     </font></a><span class="comment"> * here rather than in @c ACE_OS in order to separate concerns.</span>
+<a name="13"><font size=-1>13     </font></a><span class="comment"> *</span>
+<a name="14"><font size=-1>14     </font></a><span class="comment"> * @author Douglas C. Schmidt &lt;d.schmidt@vanderbilt.edu&gt;</span>
+<a name="15"><font size=-1>15     </font></a><span class="comment"> */</span>
+<a name="16"><font size=-1>16     </font></a><span class="comment">//=============================================================================</span>
+<a name="17"><font size=-1>17     </font></a><span class="comment"></span>
+<a name="18"><font size=-1>18     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#4872">ACE_ACE_H</a></span>
+<a name="19"><font size=-1>19     </font></a><span class="preproc">#define <a href="dictionary_A.html#4872">ACE_ACE_H</a></span>
+<a name="20"><font size=-1>20     </font></a><span class="preproc"></span>
+<a name="21"><font size=-1>21     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="22"><font size=-1>22     </font></a><span class="string"></span>
+<a name="23"><font size=-1>23     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/config-lite.h&quot;</span>
+<a name="24"><font size=-1>24     </font></a><span class="string"></span>
+<a name="25"><font size=-1>25     </font></a><span class="string"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#26">ACE_LACKS_PRAGMA_ONCE</a>)</span>
+<a name="26"><font size=-1>26     </font></a><span class="default"></span><span class="preproc"># pragma </span><span class="default">once</span>
+<a name="27"><font size=-1>27     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_PRAGMA_ONCE */</span>
+<a name="28"><font size=-1>28     </font></a><span class="comment"></span>
+<a name="29"><font size=-1>29     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/Basic_Types.h&quot;</span>
+<a name="30"><font size=-1>30     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/Default_Constants.h&quot;</span>
+<a name="31"><font size=-1>31     </font></a><span class="string"></span>
+<a name="32"><font size=-1>32     </font></a><span class="string"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#41">ACE_EXPORT_MACRO</a>)</span>
+<a name="33"><font size=-1>33     </font></a><span class="default"></span><span class="preproc">#  undef <a href="dictionary_A.html#41">ACE_EXPORT_MACRO</a></span>
+<a name="34"><font size=-1>34     </font></a><span class="preproc">#endif</span>
+<a name="35"><font size=-1>35     </font></a><span class="preproc">#define <a href="dictionary_A.html#41">ACE_EXPORT_MACRO</a> <a href="dictionary_A.html#43">ACE_Export</a></span>
+<a name="36"><font size=-1>36     </font></a><span class="preproc"></span>
+<a name="37"><font size=-1>37     </font></a><span class="preproc"></span><span class="comment">// Open versioned namespace, if enabled by the user.</span>
+<a name="38"><font size=-1>38     </font></a><span class="comment"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="39"><font size=-1>39     </font></a><span class="comment"></span>
+<a name="40"><font size=-1>40     </font></a><span class="comment">// Forward declarations.</span>
+<a name="41"><font size=-1>41     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#718">ACE_Time_Value</a></span><span class="default">;</span>
+<a name="42"><font size=-1>42     </font></a><span class="default"></span><span class="keyword">class <a href="dictionary_A.html#774">ACE_Message_Block</a></span><span class="default">;</span>
+<a name="43"><font size=-1>43     </font></a><span class="default"></span><span class="keyword">class <a href="dictionary_A.html#12079">ACE_Handle_Set</a></span><span class="default">;</span>
+<a name="44"><font size=-1>44     </font></a><span class="default"></span>
+<a name="45"><font size=-1>45     </font></a><span class="default"></span><span class="comment">/**</span>
+<a name="46"><font size=-1>46     </font></a><span class="comment"> * @namespace ACE</span>
+<a name="47"><font size=-1>47     </font></a><span class="comment"> *</span>
+<a name="48"><font size=-1>48     </font></a><span class="comment"> * @brief The namespace containing the ACE framework itself.</span>
+<a name="49"><font size=-1>49     </font></a><span class="comment"> *</span>
+<a name="50"><font size=-1>50     </font></a><span class="comment"> * The ACE namespace contains all types (classes, structures,</span>
+<a name="51"><font size=-1>51     </font></a><span class="comment"> * typedefs, etc), and global functions and variables in the ACE</span>
+<a name="52"><font size=-1>52     </font></a><span class="comment"> * framework.</span>
+<a name="53"><font size=-1>53     </font></a><span class="comment"> */</span>
+<a name="54"><font size=-1>54     </font></a><span class="comment"></span><span class="keyword">namespace </span><span class="default">ACE</span>
+<a name="55"><font size=-1>55     </font></a><span class="default">{</span>
+<a name="56"><font size=-1>56     </font></a><span class="default">  </span><span class="comment">// = ACE version information.</span>
+<a name="57"><font size=-1>57     </font></a><span class="comment">  /// e.g., the &quot;6&quot; in ACE 6.3.4</span>
+<a name="58"><font size=-1>58     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_M.html#11915">major_version</a> </span><span class="default">();</span>
+<a name="59"><font size=-1>59     </font></a><span class="default"></span>
+<a name="60"><font size=-1>60     </font></a><span class="default">  </span><span class="comment">/// e.g., the &quot;3&quot; in ACE 6.3.4</span>
+<a name="61"><font size=-1>61     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_M.html#11921">minor_version</a> </span><span class="default">();</span>
+<a name="62"><font size=-1>62     </font></a><span class="default"></span>
+<a name="63"><font size=-1>63     </font></a><span class="default">  </span><span class="comment">/// e.g., the &quot;4&quot; in ACE 6.3.4</span>
+<a name="64"><font size=-1>64     </font></a><span class="comment">  /// Returns 0 for &quot;stable&quot; (non-micro) releases.</span>
+<a name="65"><font size=-1>65     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_M.html#11917">micro_version</a> </span><span class="default">();</span>
+<a name="66"><font size=-1>66     </font></a><span class="default"></span>
+<a name="67"><font size=-1>67     </font></a><span class="default">  </span><span class="comment">/// e.g., the &quot;4&quot; in ACE 6.3.4</span>
+<a name="68"><font size=-1>68     </font></a><span class="comment">  /// Returns 0 for &quot;stable&quot; (non-micro) releases.</span>
+<a name="69"><font size=-1>69     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_B.html#11829">beta_version</a> </span><span class="default">();</span>
+<a name="70"><font size=-1>70     </font></a><span class="default"></span>
+<a name="71"><font size=-1>71     </font></a><span class="default">  </span><span class="comment">// = C++ compiler version information.</span>
+<a name="72"><font size=-1>72     </font></a><span class="comment">  /// E.g., the &quot;SunPro C++&quot; in SunPro C++ 4.32.0</span>
+<a name="73"><font size=-1>73     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">* <a href="dictionary_C.html#11833">compiler_name</a> ();</span>
+<a name="74"><font size=-1>74     </font></a><span class="default"></span>
+<a name="75"><font size=-1>75     </font></a><span class="default">  </span><span class="comment">/// E.g., the &quot;4&quot; in SunPro C++ 4.32.0</span>
+<a name="76"><font size=-1>76     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_C.html#11831">compiler_major_version</a> </span><span class="default">();</span>
+<a name="77"><font size=-1>77     </font></a><span class="default"></span>
+<a name="78"><font size=-1>78     </font></a><span class="default">  </span><span class="comment">/// E.g., the &quot;32&quot; in SunPro C++ 4.32.0</span>
+<a name="79"><font size=-1>79     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_C.html#11832">compiler_minor_version</a> </span><span class="default">();</span>
+<a name="80"><font size=-1>80     </font></a><span class="default"></span>
+<a name="81"><font size=-1>81     </font></a><span class="default">  </span><span class="comment">/// E.g., the &quot;0&quot; in SunPro C++ 4.32.0</span>
+<a name="82"><font size=-1>82     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#891">u_int</a> <a href="dictionary_C.html#11830">compiler_beta_version</a> </span><span class="default">();</span>
+<a name="83"><font size=-1>83     </font></a><span class="default"></span>
+<a name="84"><font size=-1>84     </font></a><span class="default">  </span><span class="comment">/// Check if error indicates the process being out of handles (file</span>
+<a name="85"><font size=-1>85     </font></a><span class="comment">  /// descriptors).</span>
+<a name="86"><font size=-1>86     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_O.html#11924">out_of_handles</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_E.html#11925">error</a></span><span class="default">);</span>
+<a name="87"><font size=-1>87     </font></a><span class="default"></span>
+<a name="88"><font size=-1>88     </font></a><span class="default">  </span><span class="comment">/// Simple wildcard matching function supporting '*' and '?'</span>
+<a name="89"><font size=-1>89     </font></a><span class="comment">  /// return true if string s matches pattern.</span>
+<a name="90"><font size=-1>90     </font></a><span class="comment">  /// If @a character_classes is true, '[' is treated as a wildcard character</span>
+<a name="91"><font size=-1>91     </font></a><span class="comment">  /// as described in the fnmatch() POSIX API.  The following POSIX &quot;bracket</span>
+<a name="92"><font size=-1>92     </font></a><span class="comment">  /// expression&quot; features are not implemented: collating symbols, equivalence</span>
+<a name="93"><font size=-1>93     </font></a><span class="comment">  /// class expressions, and character class expressions.  The POSIX locale is</span>
+<a name="94"><font size=-1>94     </font></a><span class="comment">  /// assumed.</span>
+<a name="95"><font size=-1>95     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> bool <a href="dictionary_W.html#12065">wild_match</a></span><span class="default">(</span><span class="keyword">const char</span><span class="default">* <a href="dictionary_S.html#12069">s</a>, </span><span class="keyword">const char</span><span class="default">* <a href="dictionary_P.html#12068">pattern</a>,</span>
+<a name="96"><font size=-1>96     </font></a><span class="default">    </span><span class="keyword">bool <a href="dictionary_C.html#12066">case_sensitive</a> </span><span class="default">= </span><span class="keyword">true</span><span class="default">, </span><span class="keyword">bool <a href="dictionary_C.html#12067">character_classes</a> </span><span class="default">= </span><span class="keyword">false</span><span class="default">);</span>
+<a name="97"><font size=-1>97     </font></a><span class="default"></span>
+<a name="98"><font size=-1>98     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="99"><font size=-1>99     </font></a><span class="comment">   * @name I/O operations</span>
+<a name="100"><font size=-1>100     </font></a><span class="comment">   *</span>
+<a name="101"><font size=-1>101     </font></a><span class="comment">   * Notes on common parameters:</span>
+<a name="102"><font size=-1>102     </font></a><span class="comment">   *</span>
+<a name="103"><font size=-1>103     </font></a><span class="comment">   * @a handle is the connected endpoint that will be used for I/O.</span>
+<a name="104"><font size=-1>104     </font></a><span class="comment">   *</span>
+<a name="105"><font size=-1>105     </font></a><span class="comment">   * @a buf is the buffer to write from or receive into.</span>
+<a name="106"><font size=-1>106     </font></a><span class="comment">   *</span>
+<a name="107"><font size=-1>107     </font></a><span class="comment">   * @a len is the number of bytes to transfer.</span>
+<a name="108"><font size=-1>108     </font></a><span class="comment">   *</span>
+<a name="109"><font size=-1>109     </font></a><span class="comment">   * The @a timeout parameter in the following methods indicates how</span>
+<a name="110"><font size=-1>110     </font></a><span class="comment">   * long to blocking trying to transfer data.  If @a timeout == 0,</span>
+<a name="111"><font size=-1>111     </font></a><span class="comment">   * then the call behaves as a normal send/recv call, i.e., for</span>
+<a name="112"><font size=-1>112     </font></a><span class="comment">   * blocking sockets, the call will block until action is possible;</span>
+<a name="113"><font size=-1>113     </font></a><span class="comment">   * for non-blocking sockets, @c EWOULDBLOCK will be returned if no</span>
+<a name="114"><font size=-1>114     </font></a><span class="comment">   * action is immediately possible.</span>
+<a name="115"><font size=-1>115     </font></a><span class="comment">   *</span>
+<a name="116"><font size=-1>116     </font></a><span class="comment">   * If @a timeout != 0, the call will wait until the relative time</span>
+<a name="117"><font size=-1>117     </font></a><span class="comment">   * specified in  @a *timeout elapses.</span>
+<a name="118"><font size=-1>118     </font></a><span class="comment">   *</span>
+<a name="119"><font size=-1>119     </font></a><span class="comment">   * The &quot;_n()&quot; I/O methods keep looping until all the data has been</span>
+<a name="120"><font size=-1>120     </font></a><span class="comment">   * transferred.  These methods also work for sockets in non-blocking</span>
+<a name="121"><font size=-1>121     </font></a><span class="comment">   * mode i.e., they keep looping on @c EWOULDBLOCK.  @a timeout is</span>
+<a name="122"><font size=-1>122     </font></a><span class="comment">   * used to make sure we keep making progress, i.e., the same timeout</span>
+<a name="123"><font size=-1>123     </font></a><span class="comment">   * value is used for every I/O operation in the loop and the timeout</span>
+<a name="124"><font size=-1>124     </font></a><span class="comment">   * is not counted down.</span>
+<a name="125"><font size=-1>125     </font></a><span class="comment">   *</span>
+<a name="126"><font size=-1>126     </font></a><span class="comment">   * The return values for the &quot;*_n()&quot; methods match the return values</span>
+<a name="127"><font size=-1>127     </font></a><span class="comment">   * from the non &quot;_n()&quot; methods and are specified as follows:</span>
+<a name="128"><font size=-1>128     </font></a><span class="comment">   *</span>
+<a name="129"><font size=-1>129     </font></a><span class="comment">   * - On complete transfer, the number of bytes transferred is returned.</span>
+<a name="130"><font size=-1>130     </font></a><span class="comment">   * - On timeout, -1 is returned, @c errno == @c ETIME.</span>
+<a name="131"><font size=-1>131     </font></a><span class="comment">   * - On error, -1 is returned, @c errno is set to appropriate error.</span>
+<a name="132"><font size=-1>132     </font></a><span class="comment">   * - On @c EOF, 0 is returned, @c errno is irrelevant.</span>
+<a name="133"><font size=-1>133     </font></a><span class="comment">   *</span>
+<a name="134"><font size=-1>134     </font></a><span class="comment">   * On partial transfers, i.e., if any data is transferred before</span>
+<a name="135"><font size=-1>135     </font></a><span class="comment">   * timeout / error / @c EOF, @a bytes_transferred&gt; will contain the</span>
+<a name="136"><font size=-1>136     </font></a><span class="comment">   * number of bytes transferred.</span>
+<a name="137"><font size=-1>137     </font></a><span class="comment">   *</span>
+<a name="138"><font size=-1>138     </font></a><span class="comment">   * Methods with @a iovec parameter are I/O vector variants of the</span>
+<a name="139"><font size=-1>139     </font></a><span class="comment">   * I/O operations.</span>
+<a name="140"><font size=-1>140     </font></a><span class="comment">   *</span>
+<a name="141"><font size=-1>141     </font></a><span class="comment">   * Methods with the extra @a flags argument will always result in</span>
+<a name="142"><font size=-1>142     </font></a><span class="comment">   * @c send getting called. Methods without the extra @a flags</span>
+<a name="143"><font size=-1>143     </font></a><span class="comment">   * argument will result in @c send getting called on Win32</span>
+<a name="144"><font size=-1>144     </font></a><span class="comment">   * platforms, and @c write getting called on non-Win32 platforms.</span>
+<a name="145"><font size=-1>145     </font></a><span class="comment">   */</span>
+<a name="146"><font size=-1>146     </font></a><span class="comment">  //@{</span>
+<a name="147"><font size=-1>147     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11936">recv</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11939">handle</a>,</span>
+<a name="148"><font size=-1>148     </font></a><span class="default">                                  </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#11937">buf</a>,</span>
+<a name="149"><font size=-1>149     </font></a><span class="default">                                  size_t <a href="dictionary_L.html#11940">len</a>,</span>
+<a name="150"><font size=-1>150     </font></a><span class="default">                                  </span><span class="keyword">int <a href="dictionary_F.html#11938">flags</a></span><span class="default">,</span>
+<a name="151"><font size=-1>151     </font></a><span class="default">                                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11941">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="152"><font size=-1>152     </font></a><span class="default"></span>
+<a name="153"><font size=-1>153     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#725">ACE_HAS_TLI</a>)</span>
+<a name="154"><font size=-1>154     </font></a><span class="default"></span>
+<a name="155"><font size=-1>155     </font></a><span class="default">  </span><span class="keyword">extern </span><span class="default">ACE_Export ssize_t t_rcv (ACE_HANDLE handle,</span>
+<a name="156"><font size=-1>156     </font></a><span class="default">                                   </span><span class="keyword">void </span><span class="default">*buf,</span>
+<a name="157"><font size=-1>157     </font></a><span class="default">                                   size_t len,</span>
+<a name="158"><font size=-1>158     </font></a><span class="default">                                   </span><span class="keyword">int </span><span class="default">*flags,</span>
+<a name="159"><font size=-1>159     </font></a><span class="default">                                   </span><span class="keyword">const </span><span class="default">ACE_Time_Value *timeout = </span><span class="number">0</span><span class="default">);</span>
+<a name="160"><font size=-1>160     </font></a><span class="default"></span>
+<a name="161"><font size=-1>161     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_TLI */</span>
+<a name="162"><font size=-1>162     </font></a><span class="comment"></span>
+<a name="163"><font size=-1>163     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11942">recv</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11944">handle</a>,</span>
+<a name="164"><font size=-1>164     </font></a><span class="default">                                  </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#11943">buf</a>,</span>
+<a name="165"><font size=-1>165     </font></a><span class="default">                                  size_t <a href="dictionary_L.html#11945">len</a>,</span>
+<a name="166"><font size=-1>166     </font></a><span class="default">                                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11946">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="167"><font size=-1>167     </font></a><span class="default"></span>
+<a name="168"><font size=-1>168     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11964">recvmsg</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11966">handle</a>,</span>
+<a name="169"><font size=-1>169     </font></a><span class="default">                                     </span><span class="keyword">struct </span><span class="default">msghdr *<a href="dictionary_M.html#11967">msg</a>,</span>
+<a name="170"><font size=-1>170     </font></a><span class="default">                                     </span><span class="keyword">int <a href="dictionary_F.html#11965">flags</a></span><span class="default">,</span>
+<a name="171"><font size=-1>171     </font></a><span class="default">                                     </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11968">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="172"><font size=-1>172     </font></a><span class="default"></span>
+<a name="173"><font size=-1>173     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11956">recvfrom</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11961">handle</a>,</span>
+<a name="174"><font size=-1>174     </font></a><span class="default">                                      </span><span class="keyword">char </span><span class="default">*<a href="dictionary_B.html#11959">buf</a>,</span>
+<a name="175"><font size=-1>175     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_L.html#11962">len</a></span><span class="default">,</span>
+<a name="176"><font size=-1>176     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_F.html#11960">flags</a></span><span class="default">,</span>
+<a name="177"><font size=-1>177     </font></a><span class="default">                                      </span><span class="keyword">struct </span><span class="default">sockaddr *<a href="dictionary_A.html#11957">addr</a>,</span>
+<a name="178"><font size=-1>178     </font></a><span class="default">                                      </span><span class="keyword">int </span><span class="default">*<a href="dictionary_A.html#11958">addrlen</a>,</span>
+<a name="179"><font size=-1>179     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11963">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="180"><font size=-1>180     </font></a><span class="default"></span>
+<a name="181"><font size=-1>181     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="182"><font size=-1>182     </font></a><span class="default">  ssize_t <a href="dictionary_R.html#568">recv_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#572">handle</a>,</span>
+<a name="183"><font size=-1>183     </font></a><span class="default">                  </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#569">buf</a>,</span>
+<a name="184"><font size=-1>184     </font></a><span class="default">                  size_t <a href="dictionary_L.html#573">len</a>,</span>
+<a name="185"><font size=-1>185     </font></a><span class="default">                  </span><span class="keyword">int <a href="dictionary_F.html#571">flags</a></span><span class="default">,</span>
+<a name="186"><font size=-1>186     </font></a><span class="default">                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#574">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="187"><font size=-1>187     </font></a><span class="default">                  size_t *<a href="dictionary_B.html#570">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="188"><font size=-1>188     </font></a><span class="default"></span>
+<a name="189"><font size=-1>189     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#725">ACE_HAS_TLI</a>)</span>
+<a name="190"><font size=-1>190     </font></a><span class="default"></span>
+<a name="191"><font size=-1>191     </font></a><span class="default">  ACE_NAMESPACE_INLINE_FUNCTION</span>
+<a name="192"><font size=-1>192     </font></a><span class="default">  ssize_t t_rcv_n (ACE_HANDLE handle,</span>
+<a name="193"><font size=-1>193     </font></a><span class="default">                   </span><span class="keyword">void </span><span class="default">*buf,</span>
+<a name="194"><font size=-1>194     </font></a><span class="default">                   size_t len,</span>
+<a name="195"><font size=-1>195     </font></a><span class="default">                   </span><span class="keyword">int </span><span class="default">*flags,</span>
+<a name="196"><font size=-1>196     </font></a><span class="default">                   </span><span class="keyword">const </span><span class="default">ACE_Time_Value *timeout = </span><span class="number">0</span><span class="default">,</span>
+<a name="197"><font size=-1>197     </font></a><span class="default">                   size_t *bytes_transferred = </span><span class="number">0</span><span class="default">);</span>
+<a name="198"><font size=-1>198     </font></a><span class="default"></span>
+<a name="199"><font size=-1>199     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_TLI */</span>
+<a name="200"><font size=-1>200     </font></a><span class="comment"></span>
+<a name="201"><font size=-1>201     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="202"><font size=-1>202     </font></a><span class="comment">  </span><span class="default">ssize_t <a href="dictionary_R.html#575">recv_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#578">handle</a>,</span>
+<a name="203"><font size=-1>203     </font></a><span class="default">                  </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#576">buf</a>,</span>
+<a name="204"><font size=-1>204     </font></a><span class="default">                  size_t <a href="dictionary_L.html#579">len</a>,</span>
+<a name="205"><font size=-1>205     </font></a><span class="default">                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#580">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="206"><font size=-1>206     </font></a><span class="default">                  size_t *<a href="dictionary_B.html#577">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="207"><font size=-1>207     </font></a><span class="default"></span>
+<a name="208"><font size=-1>208     </font></a><span class="default">  </span><span class="comment">/// Receive into a variable number of pieces.</span>
+<a name="209"><font size=-1>209     </font></a><span class="comment">  /**</span>
+<a name="210"><font size=-1>210     </font></a><span class="comment">   * Accepts a variable, caller-specified, number of pointer/length</span>
+<a name="211"><font size=-1>211     </font></a><span class="comment">   * pairs. Arguments following @a n are char *, size_t pairs.</span>
+<a name="212"><font size=-1>212     </font></a><span class="comment">   *</span>
+<a name="213"><font size=-1>213     </font></a><span class="comment">   * @param handle The I/O handle to receive on</span>
+<a name="214"><font size=-1>214     </font></a><span class="comment">   * @param n      The total number of char *, size_t pairs following @a n.</span>
+<a name="215"><font size=-1>215     </font></a><span class="comment">   *</span>
+<a name="216"><font size=-1>216     </font></a><span class="comment">   * @return -1 on error, else total number of bytes received.</span>
+<a name="217"><font size=-1>217     </font></a><span class="comment">   */</span>
+<a name="218"><font size=-1>218     </font></a><span class="comment"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8517">ACE_LACKS_VA_FUNCTIONS</a>)</span>
+<a name="219"><font size=-1>219     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11947">recv</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11949">handle</a>, size_t <a href="dictionary_N.html#11950">n</a>, ...);</span>
+<a name="220"><font size=-1>220     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_VA_FUNCTIONS */</span>
+<a name="221"><font size=-1>221     </font></a><span class="comment"></span>
+<a name="222"><font size=-1>222     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11969">recvv</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11970">handle</a>,</span>
+<a name="223"><font size=-1>223     </font></a><span class="default">                                   iovec *<a href="dictionary_I.html#11971">iov</a>,</span>
+<a name="224"><font size=-1>224     </font></a><span class="default">                                   </span><span class="keyword">int <a href="dictionary_I.html#11972">iovcnt</a></span><span class="default">,</span>
+<a name="225"><font size=-1>225     </font></a><span class="default">                                   </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11973">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="226"><font size=-1>226     </font></a><span class="default"></span>
+<a name="227"><font size=-1>227     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="228"><font size=-1>228     </font></a><span class="default">  ssize_t <a href="dictionary_R.html#605">recvv_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#607">handle</a>,</span>
+<a name="229"><font size=-1>229     </font></a><span class="default">                   iovec *<a href="dictionary_I.html#608">iov</a>,</span>
+<a name="230"><font size=-1>230     </font></a><span class="default">                   </span><span class="keyword">int <a href="dictionary_I.html#609">iovcnt</a></span><span class="default">,</span>
+<a name="231"><font size=-1>231     </font></a><span class="default">                   </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#610">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="232"><font size=-1>232     </font></a><span class="default">                   size_t *<a href="dictionary_B.html#606">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="233"><font size=-1>233     </font></a><span class="default"></span>
+<a name="234"><font size=-1>234     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11951">recv_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11953">handle</a>,</span>
+<a name="235"><font size=-1>235     </font></a><span class="default">                                    <a href="dictionary_A.html#774">ACE_Message_Block</a> *<a href="dictionary_M.html#11954">message_block</a>,</span>
+<a name="236"><font size=-1>236     </font></a><span class="default">                                    </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11955">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="237"><font size=-1>237     </font></a><span class="default">                                    size_t *<a href="dictionary_B.html#11952">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="238"><font size=-1>238     </font></a><span class="default"></span>
+<a name="239"><font size=-1>239     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#11991">send</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11994">handle</a>,</span>
+<a name="240"><font size=-1>240     </font></a><span class="default">                                  </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#11992">buf</a>,</span>
+<a name="241"><font size=-1>241     </font></a><span class="default">                                  size_t <a href="dictionary_L.html#11995">len</a>,</span>
+<a name="242"><font size=-1>242     </font></a><span class="default">                                  </span><span class="keyword">int <a href="dictionary_F.html#11993">flags</a></span><span class="default">,</span>
+<a name="243"><font size=-1>243     </font></a><span class="default">                                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11996">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="244"><font size=-1>244     </font></a><span class="default"></span>
+<a name="245"><font size=-1>245     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#725">ACE_HAS_TLI</a>)</span>
+<a name="246"><font size=-1>246     </font></a><span class="default"></span>
+<a name="247"><font size=-1>247     </font></a><span class="default">  </span><span class="keyword">extern </span><span class="default">ACE_Export ssize_t t_snd (ACE_HANDLE handle,</span>
+<a name="248"><font size=-1>248     </font></a><span class="default">                                   </span><span class="keyword">const void </span><span class="default">*buf,</span>
+<a name="249"><font size=-1>249     </font></a><span class="default">                                   size_t len,</span>
+<a name="250"><font size=-1>250     </font></a><span class="default">                                   </span><span class="keyword">int </span><span class="default">flags,</span>
+<a name="251"><font size=-1>251     </font></a><span class="default">                                   </span><span class="keyword">const </span><span class="default">ACE_Time_Value *timeout = </span><span class="number">0</span><span class="default">);</span>
+<a name="252"><font size=-1>252     </font></a><span class="default"></span>
+<a name="253"><font size=-1>253     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_TLI */</span>
+<a name="254"><font size=-1>254     </font></a><span class="comment"></span>
+<a name="255"><font size=-1>255     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#11997">send</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11999">handle</a>,</span>
+<a name="256"><font size=-1>256     </font></a><span class="default">                                  </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#11998">buf</a>,</span>
+<a name="257"><font size=-1>257     </font></a><span class="default">                                  size_t <a href="dictionary_L.html#12000">len</a>,</span>
+<a name="258"><font size=-1>258     </font></a><span class="default">                                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#12001">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="259"><font size=-1>259     </font></a><span class="default"></span>
+<a name="260"><font size=-1>260     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#12011">sendmsg</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12013">handle</a>,</span>
+<a name="261"><font size=-1>261     </font></a><span class="default">                                     </span><span class="keyword">const struct </span><span class="default">msghdr *<a href="dictionary_M.html#12014">msg</a>,</span>
+<a name="262"><font size=-1>262     </font></a><span class="default">                                     </span><span class="keyword">int <a href="dictionary_F.html#12012">flags</a></span><span class="default">,</span>
+<a name="263"><font size=-1>263     </font></a><span class="default">                                     </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#12015">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="264"><font size=-1>264     </font></a><span class="default"></span>
+<a name="265"><font size=-1>265     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#12016">sendto</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12021">handle</a>,</span>
+<a name="266"><font size=-1>266     </font></a><span class="default">                                    </span><span class="keyword">const char </span><span class="default">*<a href="dictionary_B.html#12019">buf</a>,</span>
+<a name="267"><font size=-1>267     </font></a><span class="default">                                    </span><span class="keyword">int <a href="dictionary_L.html#12022">len</a></span><span class="default">,</span>
+<a name="268"><font size=-1>268     </font></a><span class="default">                                    </span><span class="keyword">int <a href="dictionary_F.html#12020">flags</a></span><span class="default">,</span>
+<a name="269"><font size=-1>269     </font></a><span class="default">                                    </span><span class="keyword">const struct </span><span class="default">sockaddr *<a href="dictionary_A.html#12017">addr</a>,</span>
+<a name="270"><font size=-1>270     </font></a><span class="default">                                    </span><span class="keyword">int <a href="dictionary_A.html#12018">addrlen</a></span><span class="default">,</span>
+<a name="271"><font size=-1>271     </font></a><span class="default">                                    </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#12023">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="272"><font size=-1>272     </font></a><span class="default"></span>
+<a name="273"><font size=-1>273     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="274"><font size=-1>274     </font></a><span class="default">  ssize_t <a href="dictionary_S.html#626">send_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#630">handle</a>,</span>
+<a name="275"><font size=-1>275     </font></a><span class="default">                  </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#627">buf</a>,</span>
+<a name="276"><font size=-1>276     </font></a><span class="default">                  size_t <a href="dictionary_L.html#631">len</a>,</span>
+<a name="277"><font size=-1>277     </font></a><span class="default">                  </span><span class="keyword">int <a href="dictionary_F.html#629">flags</a></span><span class="default">,</span>
+<a name="278"><font size=-1>278     </font></a><span class="default">                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#632">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="279"><font size=-1>279     </font></a><span class="default">                  size_t *<a href="dictionary_B.html#628">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="280"><font size=-1>280     </font></a><span class="default"></span>
+<a name="281"><font size=-1>281     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#725">ACE_HAS_TLI</a>)</span>
+<a name="282"><font size=-1>282     </font></a><span class="default"></span>
+<a name="283"><font size=-1>283     </font></a><span class="default">  ACE_NAMESPACE_INLINE_FUNCTION</span>
+<a name="284"><font size=-1>284     </font></a><span class="default">  ssize_t t_snd_n (ACE_HANDLE handle,</span>
+<a name="285"><font size=-1>285     </font></a><span class="default">                   </span><span class="keyword">const void </span><span class="default">*buf,</span>
+<a name="286"><font size=-1>286     </font></a><span class="default">                   size_t len,</span>
+<a name="287"><font size=-1>287     </font></a><span class="default">                   </span><span class="keyword">int </span><span class="default">flags,</span>
+<a name="288"><font size=-1>288     </font></a><span class="default">                   </span><span class="keyword">const </span><span class="default">ACE_Time_Value *timeout = </span><span class="number">0</span><span class="default">,</span>
+<a name="289"><font size=-1>289     </font></a><span class="default">                   size_t *bytes_transferred = </span><span class="number">0</span><span class="default">);</span>
+<a name="290"><font size=-1>290     </font></a><span class="default"></span>
+<a name="291"><font size=-1>291     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_TLI */</span>
+<a name="292"><font size=-1>292     </font></a><span class="comment"></span>
+<a name="293"><font size=-1>293     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="294"><font size=-1>294     </font></a><span class="comment">  </span><span class="default">ssize_t <a href="dictionary_S.html#633">send_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#636">handle</a>,</span>
+<a name="295"><font size=-1>295     </font></a><span class="default">                  </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#634">buf</a>,</span>
+<a name="296"><font size=-1>296     </font></a><span class="default">                  size_t <a href="dictionary_L.html#637">len</a>,</span>
+<a name="297"><font size=-1>297     </font></a><span class="default">                  </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#638">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="298"><font size=-1>298     </font></a><span class="default">                  size_t *<a href="dictionary_B.html#635">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="299"><font size=-1>299     </font></a><span class="default"></span>
+<a name="300"><font size=-1>300     </font></a><span class="default">  </span><span class="comment">/// Varargs variant.</span>
+<a name="301"><font size=-1>301     </font></a><span class="comment"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8517">ACE_LACKS_VA_FUNCTIONS</a>)</span>
+<a name="302"><font size=-1>302     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#12002">send</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12004">handle</a>, size_t <a href="dictionary_N.html#12005">n</a>, ...);</span>
+<a name="303"><font size=-1>303     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_VA_FUNCTIONS */</span>
+<a name="304"><font size=-1>304     </font></a><span class="comment"></span>
+<a name="305"><font size=-1>305     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#12024">sendv</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12025">handle</a>,</span>
+<a name="306"><font size=-1>306     </font></a><span class="default">                                   </span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#12026">iov</a>,</span>
+<a name="307"><font size=-1>307     </font></a><span class="default">                                   </span><span class="keyword">int <a href="dictionary_I.html#12027">iovcnt</a></span><span class="default">,</span>
+<a name="308"><font size=-1>308     </font></a><span class="default">                                   </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#12028">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="309"><font size=-1>309     </font></a><span class="default"></span>
+<a name="310"><font size=-1>310     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="311"><font size=-1>311     </font></a><span class="default">  ssize_t <a href="dictionary_S.html#663">sendv_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#665">handle</a>,</span>
+<a name="312"><font size=-1>312     </font></a><span class="default">                   </span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#666">iov</a>,</span>
+<a name="313"><font size=-1>313     </font></a><span class="default">                   </span><span class="keyword">int <a href="dictionary_I.html#667">iovcnt</a></span><span class="default">,</span>
+<a name="314"><font size=-1>314     </font></a><span class="default">                   </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#668">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="315"><font size=-1>315     </font></a><span class="default">                   size_t *<a href="dictionary_B.html#664">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="316"><font size=-1>316     </font></a><span class="default"></span>
+<a name="317"><font size=-1>317     </font></a><span class="default">  </span><span class="comment">/// Send all the @a message_blocks chained through their @c next and</span>
+<a name="318"><font size=-1>318     </font></a><span class="comment">  /// @c cont pointers.  This call uses the underlying OS gather-write</span>
+<a name="319"><font size=-1>319     </font></a><span class="comment">  /// operation to reduce the domain-crossing penalty.</span>
+<a name="320"><font size=-1>320     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#12006">send_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12008">handle</a>,</span>
+<a name="321"><font size=-1>321     </font></a><span class="default">                                    </span><span class="keyword">const <a href="dictionary_A.html#774">ACE_Message_Block</a> </span><span class="default">*<a href="dictionary_M.html#12009">message_block</a>,</span>
+<a name="322"><font size=-1>322     </font></a><span class="default">                                    </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#12010">timeout</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="323"><font size=-1>323     </font></a><span class="default">                                    size_t *<a href="dictionary_B.html#12007">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="324"><font size=-1>324     </font></a><span class="default"></span>
+<a name="325"><font size=-1>325     </font></a><span class="default">  </span><span class="comment">// = File system I/O functions (these don't support timeouts).</span>
+<a name="326"><font size=-1>326     </font></a><span class="comment"></span>
+<a name="327"><font size=-1>327     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="328"><font size=-1>328     </font></a><span class="comment">  </span><span class="default">ssize_t <a href="dictionary_R.html#559">read_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#562">handle</a>,</span>
+<a name="329"><font size=-1>329     </font></a><span class="default">                  </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#560">buf</a>,</span>
+<a name="330"><font size=-1>330     </font></a><span class="default">                  size_t <a href="dictionary_L.html#563">len</a>,</span>
+<a name="331"><font size=-1>331     </font></a><span class="default">                  size_t *<a href="dictionary_B.html#561">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="332"><font size=-1>332     </font></a><span class="default"></span>
+<a name="333"><font size=-1>333     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="334"><font size=-1>334     </font></a><span class="default">  ssize_t <a href="dictionary_W.html#688">write_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#691">handle</a>,</span>
+<a name="335"><font size=-1>335     </font></a><span class="default">                   </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#689">buf</a>,</span>
+<a name="336"><font size=-1>336     </font></a><span class="default">                   size_t <a href="dictionary_L.html#692">len</a>,</span>
+<a name="337"><font size=-1>337     </font></a><span class="default">                   size_t *<a href="dictionary_B.html#690">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="338"><font size=-1>338     </font></a><span class="default"></span>
+<a name="339"><font size=-1>339     </font></a><span class="default">  </span><span class="comment">/// Write all the @a message_blocks chained through their @c next</span>
+<a name="340"><font size=-1>340     </font></a><span class="comment">  /// and @c cont pointers.  This call uses the underlying OS</span>
+<a name="341"><font size=-1>341     </font></a><span class="comment">  /// gather-write operation to reduce the domain-crossing penalty.</span>
+<a name="342"><font size=-1>342     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_W.html#12070">write_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12072">handle</a>,</span>
+<a name="343"><font size=-1>343     </font></a><span class="default">                                     </span><span class="keyword">const <a href="dictionary_A.html#774">ACE_Message_Block</a> </span><span class="default">*<a href="dictionary_M.html#12073">message_block</a>,</span>
+<a name="344"><font size=-1>344     </font></a><span class="default">                                     size_t *<a href="dictionary_B.html#12071">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="345"><font size=-1>345     </font></a><span class="default"></span>
+<a name="346"><font size=-1>346     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#11928">readv_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11930">handle</a>,</span>
+<a name="347"><font size=-1>347     </font></a><span class="default">                                     iovec *<a href="dictionary_I.html#11931">iov</a>,</span>
+<a name="348"><font size=-1>348     </font></a><span class="default">                                     </span><span class="keyword">int <a href="dictionary_I.html#11932">iovcnt</a></span><span class="default">,</span>
+<a name="349"><font size=-1>349     </font></a><span class="default">                                     size_t *<a href="dictionary_B.html#11929">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="350"><font size=-1>350     </font></a><span class="default"></span>
+<a name="351"><font size=-1>351     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_W.html#12074">writev_n</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#12076">handle</a>,</span>
+<a name="352"><font size=-1>352     </font></a><span class="default">                                      </span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#12077">iov</a>,</span>
+<a name="353"><font size=-1>353     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_I.html#12078">iovcnt</a></span><span class="default">,</span>
+<a name="354"><font size=-1>354     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#12075">bytes_transferred</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="355"><font size=-1>355     </font></a><span class="default">  </span><span class="comment">//@}</span>
+<a name="356"><font size=-1>356     </font></a><span class="comment"></span>
+<a name="357"><font size=-1>357     </font></a><span class="comment">  /**</span>
+<a name="358"><font size=-1>358     </font></a><span class="comment">   * Wait up to @a timeout amount of time to passively establish a</span>
+<a name="359"><font size=-1>359     </font></a><span class="comment">   * connection.  This method doesn't perform the @c accept, it just</span>
+<a name="360"><font size=-1>360     </font></a><span class="comment">   * does the timed wait.</span>
+<a name="361"><font size=-1>361     </font></a><span class="comment">   */</span>
+<a name="362"><font size=-1>362     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_H.html#11888">handle_timed_accept</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_L.html#11889">listener</a>,</span>
+<a name="363"><font size=-1>363     </font></a><span class="default">                                             <a href="dictionary_A.html#718">ACE_Time_Value</a> *<a href="dictionary_T.html#11891">timeout</a>,</span>
+<a name="364"><font size=-1>364     </font></a><span class="default">                                             </span><span class="keyword">bool <a href="dictionary_R.html#11890">restart</a></span><span class="default">);</span>
+<a name="365"><font size=-1>365     </font></a><span class="default"></span>
+<a name="366"><font size=-1>366     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="367"><font size=-1>367     </font></a><span class="comment">   * Wait up to @a timeout amount of time to complete an actively</span>
+<a name="368"><font size=-1>368     </font></a><span class="comment">   * established non-blocking connection.  If @a is_tli is non-0 then</span>
+<a name="369"><font size=-1>369     </font></a><span class="comment">   * we are being called by a TLI wrapper (which behaves slightly</span>
+<a name="370"><font size=-1>370     </font></a><span class="comment">   * differently from a socket wrapper).</span>
+<a name="371"><font size=-1>371     </font></a><span class="comment">   */</span>
+<a name="372"><font size=-1>372     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11892">handle_timed_complete</a> </span><span class="default">(</span>
+<a name="373"><font size=-1>373     </font></a><span class="default">    <a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_L.html#11894">listener</a>,</span>
+<a name="374"><font size=-1>374     </font></a><span class="default">    </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11895">timeout</a>,</span>
+<a name="375"><font size=-1>375     </font></a><span class="default">    </span><span class="keyword">int <a href="dictionary_I.html#11893">is_tli</a> </span><span class="default">= </span><span class="number">0</span><span class="default">);</span>
+<a name="376"><font size=-1>376     </font></a><span class="default"></span>
+<a name="377"><font size=-1>377     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="378"><font size=-1>378     </font></a><span class="comment">   * Reset the limit on the number of open handles.  If @a new_limit</span>
+<a name="379"><font size=-1>379     </font></a><span class="comment">   * == -1 set the limit to the maximum allowable.  Otherwise, set</span>
+<a name="380"><font size=-1>380     </font></a><span class="comment">   * the limit value to @a new_limit.  If @a increase_limit_only is</span>
+<a name="381"><font size=-1>381     </font></a><span class="comment">   * non-0 then only allow increases to the limit.</span>
+<a name="382"><font size=-1>382     </font></a><span class="comment">   */</span>
+<a name="383"><font size=-1>383     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_S.html#12029">set_handle_limit</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_N.html#12031">new_limit</a> </span><span class="default">= -</span><span class="number">1</span><span class="default">,</span>
+<a name="384"><font size=-1>384     </font></a><span class="default">                                          </span><span class="keyword">int <a href="dictionary_I.html#12030">increase_limit_only</a> </span><span class="default">= </span><span class="number">0</span><span class="default">);</span>
+<a name="385"><font size=-1>385     </font></a><span class="default"></span>
+<a name="386"><font size=-1>386     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="387"><font size=-1>387     </font></a><span class="comment">   * Returns the maximum number of open handles currently permitted in</span>
+<a name="388"><font size=-1>388     </font></a><span class="comment">   * this process.  This maximum may be extended using</span>
+<a name="389"><font size=-1>389     </font></a><span class="comment">   * @c ACE::set_handle_limit.</span>
+<a name="390"><font size=-1>390     </font></a><span class="comment">   */</span>
+<a name="391"><font size=-1>391     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_M.html#11916">max_handles</a> </span><span class="default">();</span>
+<a name="392"><font size=-1>392     </font></a><span class="default"></span>
+<a name="393"><font size=-1>393     </font></a><span class="default">  </span><span class="comment">// = String functions</span>
+<a name="394"><font size=-1>394     </font></a><span class="comment">  /**</span>
+<a name="395"><font size=-1>395     </font></a><span class="comment">   * Return a dynamically allocated duplicate of @a str, substituting</span>
+<a name="396"><font size=-1>396     </font></a><span class="comment">   * the environment variable if @c str[0] @c == @c '$'.  Note that</span>
+<a name="397"><font size=-1>397     </font></a><span class="comment">   * the pointer is allocated with @c ACE_OS::malloc and must be freed</span>
+<a name="398"><font size=-1>398     </font></a><span class="comment">   * by @c ACE_OS::free.</span>
+<a name="399"><font size=-1>399     </font></a><span class="comment">   */</span>
+<a name="400"><font size=-1>400     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_S.html#12038">strenvdup</a> (</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_S.html#12039">str</a>);</span>
+<a name="401"><font size=-1>401     </font></a><span class="default"></span>
+<a name="402"><font size=-1>402     </font></a><span class="default">  </span><span class="comment">/// Returns a pointer to the &quot;end&quot; of the string, i.e., the character</span>
+<a name="403"><font size=-1>403     </font></a><span class="comment">  /// past the '\0'.</span>
+<a name="404"><font size=-1>404     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const char </span><span class="default">*<a href="dictionary_S.html#12034">strend</a> (</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#12035">s</a>);</span>
+<a name="405"><font size=-1>405     </font></a><span class="default"></span>
+<a name="406"><font size=-1>406     </font></a><span class="default">  </span><span class="comment">/// This method is just like @c strdup, except that it uses</span>
+<a name="407"><font size=-1>407     </font></a><span class="comment">  /// @c operator @c new rather than @c malloc.  If @a s is NULL</span>
+<a name="408"><font size=-1>408     </font></a><span class="comment">  /// returns NULL rather than segfaulting.</span>
+<a name="409"><font size=-1>409     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> char </span><span class="default">*<a href="dictionary_S.html#5539">strnew</a> (</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#5540">s</a>);</span>
+<a name="410"><font size=-1>410     </font></a><span class="default"></span>
+<a name="411"><font size=-1>411     </font></a><span class="default">  </span><span class="comment">/// Delete the memory allocated by @c strnew.</span>
+<a name="412"><font size=-1>412     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="keyword">void <a href="dictionary_S.html#680">strdelete</a> </span><span class="default">(</span><span class="keyword">char </span><span class="default">*<a href="dictionary_S.html#681">s</a>);</span>
+<a name="413"><font size=-1>413     </font></a><span class="default"></span>
+<a name="414"><font size=-1>414     </font></a><span class="default">  </span><span class="comment">/// Create a fresh new copy of @a str, up to @a n chars long.  Uses</span>
+<a name="415"><font size=-1>415     </font></a><span class="comment">  /// @c ACE_OS::malloc to allocate the new string.</span>
+<a name="416"><font size=-1>416     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> char </span><span class="default">*<a href="dictionary_S.html#12040">strndup</a> (</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#12042">str</a>, size_t <a href="dictionary_N.html#12041">n</a>);</span>
+<a name="417"><font size=-1>417     </font></a><span class="default"></span>
+<a name="418"><font size=-1>418     </font></a><span class="default">  </span><span class="comment">/// Create a fresh new copy of @a str, up to @a n chars long.  Uses</span>
+<a name="419"><font size=-1>419     </font></a><span class="comment">  /// @c ACE_OS::malloc to allocate the new string.</span>
+<a name="420"><font size=-1>420     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> char </span><span class="default">*<a href="dictionary_S.html#12048">strnnew</a> (</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#12050">str</a>, size_t <a href="dictionary_N.html#12049">n</a>);</span>
+<a name="421"><font size=-1>421     </font></a><span class="default"></span>
+<a name="422"><font size=-1>422     </font></a><span class="default">  </span><span class="comment">/// Determine if a specified pathname is &quot;dot dir&quot; (ie. &quot;.&quot; or &quot;..&quot;).</span>
+<a name="423"><font size=-1>423     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="keyword">bool <a href="dictionary_I.html#550">isdotdir</a> </span><span class="default">(</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#551">s</a>);</span>
+<a name="424"><font size=-1>424     </font></a><span class="default"></span>
+<a name="425"><font size=-1>425     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#46">ACE_HAS_WCHAR</a>)</span>
+<a name="426"><font size=-1>426     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const wchar_t </span><span class="default">*<a href="dictionary_S.html#12036">strend</a> (</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#12037">s</a>);</span>
+<a name="427"><font size=-1>427     </font></a><span class="default"></span>
+<a name="428"><font size=-1>428     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> wchar_t </span><span class="default">*<a href="dictionary_S.html#12046">strnew</a> (</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#12047">s</a>);</span>
+<a name="429"><font size=-1>429     </font></a><span class="default"></span>
+<a name="430"><font size=-1>430     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="keyword">void <a href="dictionary_S.html#682">strdelete</a> </span><span class="default">(</span><span class="keyword">wchar_t </span><span class="default">*<a href="dictionary_S.html#683">s</a>);</span>
+<a name="431"><font size=-1>431     </font></a><span class="default"></span>
+<a name="432"><font size=-1>432     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> wchar_t </span><span class="default">*<a href="dictionary_S.html#12043">strndup</a> (</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#12045">str</a>, size_t <a href="dictionary_N.html#12044">n</a>);</span>
+<a name="433"><font size=-1>433     </font></a><span class="default"></span>
+<a name="434"><font size=-1>434     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> wchar_t </span><span class="default">*<a href="dictionary_S.html#12051">strnnew</a> (</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#12053">str</a>, size_t <a href="dictionary_N.html#12052">n</a>);</span>
+<a name="435"><font size=-1>435     </font></a><span class="default"></span>
+<a name="436"><font size=-1>436     </font></a><span class="default">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="keyword">bool <a href="dictionary_I.html#552">isdotdir</a> </span><span class="default">(</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#553">s</a>);</span>
+<a name="437"><font size=-1>437     </font></a><span class="default"></span>
+<a name="438"><font size=-1>438     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_WCHAR */</span>
+<a name="439"><font size=-1>439     </font></a><span class="comment"></span>
+<a name="440"><font size=-1>440     </font></a><span class="comment">  /**</span>
+<a name="441"><font size=-1>441     </font></a><span class="comment">   * On Windows, determines if a specified pathname ends with &quot;.exe&quot;</span>
+<a name="442"><font size=-1>442     </font></a><span class="comment">   * (not case sensitive). If on Windows and there is no &quot;.exe&quot; suffix,</span>
+<a name="443"><font size=-1>443     </font></a><span class="comment">   * a new ACE_TCHAR array is allocated and a copy of @c pathname with</span>
+<a name="444"><font size=-1>444     </font></a><span class="comment">   * the &quot;.exe&quot; suffix is copied into it. In this case, the caller is</span>
+<a name="445"><font size=-1>445     </font></a><span class="comment">   * responsible for calling delete [] on the returned pointer.</span>
+<a name="446"><font size=-1>446     </font></a><span class="comment">   *</span>
+<a name="447"><font size=-1>447     </font></a><span class="comment">   * @param pathname  The name to check for a proper suffix.</span>
+<a name="448"><font size=-1>448     </font></a><span class="comment">   *</span>
+<a name="449"><font size=-1>449     </font></a><span class="comment">   * @retval @c pathname if there is a proper suffix for Windows. This is</span>
+<a name="450"><font size=-1>450     </font></a><span class="comment">   *         always the return value for non-Windows platforms.</span>
+<a name="451"><font size=-1>451     </font></a><span class="comment">   * @retval If a suffix needs to be added, returns a pointer to new[]</span>
+<a name="452"><font size=-1>452     </font></a><span class="comment">   *         allocated memory containing the original @c pathname plus</span>
+<a name="453"><font size=-1>453     </font></a><span class="comment">   *         a &quot;.exe&quot; suffix. The caller is responsible for freeing the</span>
+<a name="454"><font size=-1>454     </font></a><span class="comment">   *         memory using delete [].</span>
+<a name="455"><font size=-1>455     </font></a><span class="comment">   */</span>
+<a name="456"><font size=-1>456     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_E.html#11872">execname</a> (</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_P.html#11873">pathname</a>);</span>
+<a name="457"><font size=-1>457     </font></a><span class="default"></span>
+<a name="458"><font size=-1>458     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="459"><font size=-1>459     </font></a><span class="comment">   * Returns the &quot;basename&quot; of a @a pathname separated by @a delim.</span>
+<a name="460"><font size=-1>460     </font></a><span class="comment">   * For instance, the basename of &quot;/tmp/foo.cpp&quot; is &quot;foo.cpp&quot; when</span>
+<a name="461"><font size=-1>461     </font></a><span class="comment">   * @a delim is @a '/'.</span>
+<a name="462"><font size=-1>462     </font></a><span class="comment">   */</span>
+<a name="463"><font size=-1>463     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_B.html#10526">basename</a> (</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_P.html#10527">pathname</a>,</span>
+<a name="464"><font size=-1>464     </font></a><span class="default">                                               <a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_D.html#11828">delim</a> =</span>
+<a name="465"><font size=-1>465     </font></a><span class="default">                                               <a href="dictionary_A.html#9602">ACE_DIRECTORY_SEPARATOR_CHAR</a>);</span>
+<a name="466"><font size=-1>466     </font></a><span class="default"></span>
+<a name="467"><font size=-1>467     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="468"><font size=-1>468     </font></a><span class="comment">   * Returns the &quot;dirname&quot; of a @a pathname.  For instance, the</span>
+<a name="469"><font size=-1>469     </font></a><span class="comment">   * dirname of &quot;/tmp/foo.cpp&quot; is &quot;/tmp&quot; when @a delim is @a '/'.  If</span>
+<a name="470"><font size=-1>470     </font></a><span class="comment">   * @a pathname has no @a delim &quot;.\0&quot; is returned.  This method does</span>
+<a name="471"><font size=-1>471     </font></a><span class="comment">   * not modify @a pathname and is not reentrant.</span>
+<a name="472"><font size=-1>472     </font></a><span class="comment">   */</span>
+<a name="473"><font size=-1>473     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_D.html#11861">dirname</a> (</span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_P.html#11863">pathname</a>,</span>
+<a name="474"><font size=-1>474     </font></a><span class="default">                                              <a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_D.html#11862">delim</a> =</span>
+<a name="475"><font size=-1>475     </font></a><span class="default">                                              <a href="dictionary_A.html#9602">ACE_DIRECTORY_SEPARATOR_CHAR</a>);</span>
+<a name="476"><font size=-1>476     </font></a><span class="default"></span>
+<a name="477"><font size=-1>477     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="478"><font size=-1>478     </font></a><span class="comment">   * Translate the given timestamp to ISO-8601 format.</span>
+<a name="479"><font size=-1>479     </font></a><span class="comment">   *</span>
+<a name="480"><font size=-1>480     </font></a><span class="comment">   * @param time_value      ACE_Time_Value to format. This is assumed to be</span>
+<a name="481"><font size=-1>481     </font></a><span class="comment">   *                        an absolute time value.</span>
+<a name="482"><font size=-1>482     </font></a><span class="comment">   * @param date_and_time   Array to hold the timestamp.</span>
+<a name="483"><font size=-1>483     </font></a><span class="comment">   * @param time_len        Size of @a date_and_time in ACE_TCHARs.</span>
+<a name="484"><font size=-1>484     </font></a><span class="comment">   *                        Must be greater than or equal to 27.</span>
+<a name="485"><font size=-1>485     </font></a><span class="comment">   * @param return_pointer_to_first_digit  If true, returned pointer value</span>
+<a name="486"><font size=-1>486     </font></a><span class="comment">   *                        is to the first time digit, else to the space</span>
+<a name="487"><font size=-1>487     </font></a><span class="comment">   *                        prior to the first time digit. See Return Values.</span>
+<a name="488"><font size=-1>488     </font></a><span class="comment">   *</span>
+<a name="489"><font size=-1>489     </font></a><span class="comment">   * @retval 0 if unsuccessful, with errno set. If @a time_len is less than</span>
+<a name="490"><font size=-1>490     </font></a><span class="comment">   *           27 errno will be EINVAL.</span>
+<a name="491"><font size=-1>491     </font></a><span class="comment">   * @retval If successful, pointer to beginning of the &quot;time&quot; portion of</span>
+<a name="492"><font size=-1>492     </font></a><span class="comment">   *         @a date_and_time.  If @a return_pointer_to_first_digit is false</span>
+<a name="493"><font size=-1>493     </font></a><span class="comment">   *         the pointer is actually to the space before the time, else</span>
+<a name="494"><font size=-1>494     </font></a><span class="comment">   *         the pointer is to the first time digit.</span>
+<a name="495"><font size=-1>495     </font></a><span class="comment">   */</span>
+<a name="496"><font size=-1>496     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_T.html#12056">timestamp</a> (</span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a></span><span class="default">&amp; <a href="dictionary_T.html#12060">time_value</a>,</span>
+<a name="497"><font size=-1>497     </font></a><span class="default">                                          <a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_D.html#12057">date_and_time</a>[],</span>
+<a name="498"><font size=-1>498     </font></a><span class="default">                                          size_t <a href="dictionary_T.html#12059">time_len</a>,</span>
+<a name="499"><font size=-1>499     </font></a><span class="default">                                          </span><span class="keyword">bool <a href="dictionary_R.html#12058">return_pointer_to_first_digit</a> </span><span class="default">= </span><span class="keyword">false</span><span class="default">);</span>
+<a name="500"><font size=-1>500     </font></a><span class="default"></span>
+<a name="501"><font size=-1>501     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="502"><font size=-1>502     </font></a><span class="comment">   * Translate the current time to ISO-8601 timestamp format.</span>
+<a name="503"><font size=-1>503     </font></a><span class="comment">   *</span>
+<a name="504"><font size=-1>504     </font></a><span class="comment">   * @param date_and_time   Array to hold the timestamp.</span>
+<a name="505"><font size=-1>505     </font></a><span class="comment">   * @param time_len        Size of @a date_and_time in ACE_TCHARs.</span>
+<a name="506"><font size=-1>506     </font></a><span class="comment">   *                        Must be greater than or equal to 27.</span>
+<a name="507"><font size=-1>507     </font></a><span class="comment">   * @param return_pointer_to_first_digit  If true, returned pointer value</span>
+<a name="508"><font size=-1>508     </font></a><span class="comment">   *                        is to the first time digit, else to the space</span>
+<a name="509"><font size=-1>509     </font></a><span class="comment">   *                        prior to the first time digit. See Return Values.</span>
+<a name="510"><font size=-1>510     </font></a><span class="comment">   *</span>
+<a name="511"><font size=-1>511     </font></a><span class="comment">   * @retval 0 if unsuccessful, with errno set. If @a time_len is less than</span>
+<a name="512"><font size=-1>512     </font></a><span class="comment">   *           27 errno will be EINVAL.</span>
+<a name="513"><font size=-1>513     </font></a><span class="comment">   * @retval If successful, pointer to beginning of the &quot;time&quot; portion of</span>
+<a name="514"><font size=-1>514     </font></a><span class="comment">   *         @a date_and_time.  If @a return_pointer_to_first_digit is false</span>
+<a name="515"><font size=-1>515     </font></a><span class="comment">   *         the pointer is actually to the space before the time, else</span>
+<a name="516"><font size=-1>516     </font></a><span class="comment">   *         the pointer is to the first time digit.</span>
+<a name="517"><font size=-1>517     </font></a><span class="comment">   */</span>
+<a name="518"><font size=-1>518     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_T.html#12061">timestamp</a> (<a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_D.html#12062">date_and_time</a>[],</span>
+<a name="519"><font size=-1>519     </font></a><span class="default">                                          size_t <a href="dictionary_T.html#12064">time_len</a>,</span>
+<a name="520"><font size=-1>520     </font></a><span class="default">                                          </span><span class="keyword">bool <a href="dictionary_R.html#12063">return_pointer_to_first_digit</a> </span><span class="default">= </span><span class="keyword">false</span><span class="default">);</span>
+<a name="521"><font size=-1>521     </font></a><span class="default"></span>
+<a name="522"><font size=-1>522     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="523"><font size=-1>523     </font></a><span class="comment">   * if @a avoid_zombies == 0 call @c ACE_OS::fork directly, else</span>
+<a name="524"><font size=-1>524     </font></a><span class="comment">   * create an orphan process that's inherited by the init process;</span>
+<a name="525"><font size=-1>525     </font></a><span class="comment">   * init cleans up when the orphan process terminates so we don't</span>
+<a name="526"><font size=-1>526     </font></a><span class="comment">   * create zombies.  Returns -1 on failure and either the child PID</span>
+<a name="527"><font size=-1>527     </font></a><span class="comment">   * on success if @a avoid_zombies == 0 or 1 on success if @a</span>
+<a name="528"><font size=-1>528     </font></a><span class="comment">   * avoid_zombies != 0 (this latter behavior is a known bug that</span>
+<a name="529"><font size=-1>529     </font></a><span class="comment">   * needs to be fixed).</span>
+<a name="530"><font size=-1>530     </font></a><span class="comment">   */</span>
+<a name="531"><font size=-1>531     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">pid_t <a href="dictionary_F.html#11874">fork</a> (</span>
+<a name="532"><font size=-1>532     </font></a><span class="default">    </span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">*<a href="dictionary_P.html#11876">program_name</a> = <a href="dictionary_A.html#719">ACE_TEXT</a> (</span><span class="string">&quot;&lt;unknown&gt;&quot;</span><span class="default">),</span>
+<a name="533"><font size=-1>533     </font></a><span class="default">    </span><span class="keyword">int <a href="dictionary_A.html#11875">avoid_zombies</a> </span><span class="default">= </span><span class="number">0</span><span class="default">);</span>
+<a name="534"><font size=-1>534     </font></a><span class="default"></span>
+<a name="535"><font size=-1>535     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="536"><font size=-1>536     </font></a><span class="comment">   * Become a daemon process using the algorithm in Richard Stevens</span>
+<a name="537"><font size=-1>537     </font></a><span class="comment">   * &quot;Advanced Programming in the UNIX Environment.&quot;  If</span>
+<a name="538"><font size=-1>538     </font></a><span class="comment">   * @a close_all_handles is non-zero then all open file handles are</span>
+<a name="539"><font size=-1>539     </font></a><span class="comment">   * closed.</span>
+<a name="540"><font size=-1>540     </font></a><span class="comment">   */</span>
+<a name="541"><font size=-1>541     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_D.html#11854">daemonize</a> </span><span class="default">(</span>
+<a name="542"><font size=-1>542     </font></a><span class="default">    </span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_P.html#11856">pathname</a></span><span class="default">[] = <a href="dictionary_A.html#719">ACE_TEXT</a> (</span><span class="string">&quot;/&quot;</span><span class="default">),</span>
+<a name="543"><font size=-1>543     </font></a><span class="default">    </span><span class="keyword">bool <a href="dictionary_C.html#11855">close_all_handles</a> </span><span class="default">= <a href="dictionary_A.html#9550">ACE_DEFAULT_CLOSE_ALL_HANDLES</a>,</span>
+<a name="544"><font size=-1>544     </font></a><span class="default">    </span><span class="keyword">const <a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_P.html#11857">program_name</a></span><span class="default">[] = <a href="dictionary_A.html#719">ACE_TEXT</a> (</span><span class="string">&quot;&lt;unknown&gt;&quot;</span><span class="default">));</span>
+<a name="545"><font size=-1>545     </font></a><span class="default"></span>
+<a name="546"><font size=-1>546     </font></a><span class="default">  </span><span class="comment">// = Miscellaneous functions.</span>
+<a name="547"><font size=-1>547     </font></a><span class="comment">  /// Rounds the request to a multiple of the page size.</span>
+<a name="548"><font size=-1>548     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">size_t <a href="dictionary_R.html#11979">round_to_pagesize</a> (size_t <a href="dictionary_L.html#11980">len</a>);</span>
+<a name="549"><font size=-1>549     </font></a><span class="default"></span>
+<a name="550"><font size=-1>550     </font></a><span class="default">  </span><span class="comment">/// Rounds the request to a multiple of the allocation granularity.</span>
+<a name="551"><font size=-1>551     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">size_t <a href="dictionary_R.html#11977">round_to_allocation_granularity</a> (size_t <a href="dictionary_L.html#11978">len</a>);</span>
+<a name="552"><font size=-1>552     </font></a><span class="default"></span>
+<a name="553"><font size=-1>553     </font></a><span class="default">  </span><span class="comment">// @@ UNICODE what about buffer?</span>
+<a name="554"><font size=-1>554     </font></a><span class="comment">  /// Format buffer into printable format.  This is useful for</span>
+<a name="555"><font size=-1>555     </font></a><span class="comment">  /// debugging.</span>
+<a name="556"><font size=-1>556     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">size_t <a href="dictionary_F.html#11877">format_hexdump</a> (</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_B.html#11878">buffer</a>, size_t <a href="dictionary_S.html#11881">size</a>,</span>
+<a name="557"><font size=-1>557     </font></a><span class="default">                                           <a href="dictionary_A.html#47">ACE_TCHAR</a> *<a href="dictionary_O.html#11879">obuf</a>, size_t <a href="dictionary_O.html#11880">obuf_sz</a>);</span>
+<a name="558"><font size=-1>558     </font></a><span class="default"></span>
+<a name="559"><font size=-1>559     </font></a><span class="default">  </span><span class="comment">/// Computes the hash value of {str} using the &quot;Hash PJW&quot; routine.</span>
+<a name="560"><font size=-1>560     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_H.html#4870">hash_pjw</a> </span><span class="default">(</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#4871">str</a>);</span>
+<a name="561"><font size=-1>561     </font></a><span class="default"></span>
+<a name="562"><font size=-1>562     </font></a><span class="default">  </span><span class="comment">/// Computes the hash value of {str} using the &quot;Hash PJW&quot; routine.</span>
+<a name="563"><font size=-1>563     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_H.html#11621">hash_pjw</a> </span><span class="default">(</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#11623">str</a>, size_t <a href="dictionary_L.html#11622">len</a>);</span>
+<a name="564"><font size=-1>564     </font></a><span class="default"></span>
+<a name="565"><font size=-1>565     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#46">ACE_HAS_WCHAR</a>)</span>
+<a name="566"><font size=-1>566     </font></a><span class="default">  </span><span class="comment">/// Computes the hash value of {str} using the &quot;Hash PJW&quot; routine.</span>
+<a name="567"><font size=-1>567     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_H.html#11896">hash_pjw</a> </span><span class="default">(</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#11897">str</a>);</span>
+<a name="568"><font size=-1>568     </font></a><span class="default"></span>
+<a name="569"><font size=-1>569     </font></a><span class="default">  </span><span class="comment">/// Computes the hash value of {str} using the &quot;Hash PJW&quot; routine.</span>
+<a name="570"><font size=-1>570     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_H.html#11898">hash_pjw</a> </span><span class="default">(</span><span class="keyword">const wchar_t </span><span class="default">*<a href="dictionary_S.html#11900">str</a>, size_t <a href="dictionary_L.html#11899">len</a>);</span>
+<a name="571"><font size=-1>571     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_WCHAR */</span>
+<a name="572"><font size=-1>572     </font></a><span class="comment"></span>
+<a name="573"><font size=-1>573     </font></a><span class="comment">  /// Computes CRC-CCITT for the string.</span>
+<a name="574"><font size=-1>574     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#4449">ACE_UINT16</a> <a href="dictionary_C.html#11844">crc_ccitt</a></span><span class="default">(</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#11845">str</a>);</span>
+<a name="575"><font size=-1>575     </font></a><span class="default"></span>
+<a name="576"><font size=-1>576     </font></a><span class="default">  </span><span class="comment">/// Computes CRC-CCITT for the buffer.</span>
+<a name="577"><font size=-1>577     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#4449">ACE_UINT16</a> <a href="dictionary_C.html#11846">crc_ccitt</a></span><span class="default">(</span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#11847">buf</a>, size_t <a href="dictionary_L.html#11849">len</a>,</span>
+<a name="578"><font size=-1>578     </font></a><span class="default">           <a href="dictionary_A.html#4449">ACE_UINT16</a> <a href="dictionary_C.html#11848">crc</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="579"><font size=-1>579     </font></a><span class="default"></span>
+<a name="580"><font size=-1>580     </font></a><span class="default">  </span><span class="comment">/// Computes CRC-CCITT for the @ len iovec buffers.</span>
+<a name="581"><font size=-1>581     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#4449">ACE_UINT16</a> <a href="dictionary_C.html#11850">crc_ccitt</a></span><span class="default">(</span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#11852">iov</a>, </span><span class="keyword">int <a href="dictionary_L.html#11853">len</a></span><span class="default">,</span>
+<a name="582"><font size=-1>582     </font></a><span class="default">           <a href="dictionary_A.html#4449">ACE_UINT16</a> <a href="dictionary_C.html#11851">crc</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="583"><font size=-1>583     </font></a><span class="default"></span>
+<a name="584"><font size=-1>584     </font></a><span class="default">  </span><span class="comment">/// Computes the ISO 8802-3 standard 32 bits CRC for the string.</span>
+<a name="585"><font size=-1>585     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_C.html#11834">crc32</a> </span><span class="default">(</span><span class="keyword">const char </span><span class="default">*<a href="dictionary_S.html#11835">str</a>);</span>
+<a name="586"><font size=-1>586     </font></a><span class="default"></span>
+<a name="587"><font size=-1>587     </font></a><span class="default">  </span><span class="comment">/// Computes the ISO 8802-3 standard 32 bits CRC for the buffer.</span>
+<a name="588"><font size=-1>588     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_C.html#11836">crc32</a> </span><span class="default">(</span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#11837">buf</a>, size_t <a href="dictionary_L.html#11839">len</a>,</span>
+<a name="589"><font size=-1>589     </font></a><span class="default">              <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_C.html#11838">crc</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="590"><font size=-1>590     </font></a><span class="default"></span>
+<a name="591"><font size=-1>591     </font></a><span class="default">  </span><span class="comment">/// Computes the ISO 8802-3 standard 32 bits CRC for the</span>
+<a name="592"><font size=-1>592     </font></a><span class="comment">  /// @ len iovec buffers.</span>
+<a name="593"><font size=-1>593     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_C.html#11840">crc32</a> </span><span class="default">(</span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#11842">iov</a>, </span><span class="keyword">int <a href="dictionary_L.html#11843">len</a></span><span class="default">,</span>
+<a name="594"><font size=-1>594     </font></a><span class="default">              <a href="dictionary_A.html#2973">ACE_UINT32</a> <a href="dictionary_C.html#11841">crc</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="595"><font size=-1>595     </font></a><span class="default"></span>
+<a name="596"><font size=-1>596     </font></a><span class="default">  </span><span class="comment">/// Euclid's greatest common divisor algorithm.</span>
+<a name="597"><font size=-1>597     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_G.html#11882">gcd</a> </span><span class="default">(<a href="dictionary_U.html#721">u_long</a> <a href="dictionary_X.html#11883">x</a>, <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_Y.html#11884">y</a>);</span>
+<a name="598"><font size=-1>598     </font></a><span class="default"></span>
+<a name="599"><font size=-1>599     </font></a><span class="default">  </span><span class="comment">/// Calculates the minimum enclosing frame size for the given values.</span>
+<a name="600"><font size=-1>600     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_M.html#11918">minimum_frame_size</a> </span><span class="default">(<a href="dictionary_U.html#721">u_long</a> <a href="dictionary_P.html#11919">period1</a>, <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_P.html#11920">period2</a>);</span>
+<a name="601"><font size=-1>601     </font></a><span class="default"></span>
+<a name="602"><font size=-1>602     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="603"><font size=-1>603     </font></a><span class="comment">   * Function that can burn up noticeable CPU time:  brute-force</span>
+<a name="604"><font size=-1>604     </font></a><span class="comment">   * determination of whether number @a n is prime.  Returns 0 if</span>
+<a name="605"><font size=-1>605     </font></a><span class="comment">   * it is prime, or the smallest factor if it is not prime.</span>
+<a name="606"><font size=-1>606     </font></a><span class="comment">   * @a min_factor and @a max_factor can be used to partition the work</span>
+<a name="607"><font size=-1>607     </font></a><span class="comment">   * among threads. For just one thread, typical values are 2 and</span>
+<a name="608"><font size=-1>608     </font></a><span class="comment">   * n/2.</span>
+<a name="609"><font size=-1>609     </font></a><span class="comment">   */</span>
+<a name="610"><font size=-1>610     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_I.html#11909">is_prime</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_N.html#11912">n</a></span><span class="default">,</span>
+<a name="611"><font size=-1>611     </font></a><span class="default">                                     </span><span class="keyword">const <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_M.html#11911">min_factor</a></span><span class="default">,</span>
+<a name="612"><font size=-1>612     </font></a><span class="default">                                     </span><span class="keyword">const <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_M.html#11910">max_factor</a></span><span class="default">);</span>
+<a name="613"><font size=-1>613     </font></a><span class="default"></span>
+<a name="614"><font size=-1>614     </font></a><span class="default">  </span><span class="comment">/// Map troublesome win32 errno values to values that standard C</span>
+<a name="615"><font size=-1>615     </font></a><span class="comment">  /// strerr function understands.  Thank you Microsoft.</span>
+<a name="616"><font size=-1>616     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_M.html#557">map_errno</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_E.html#558">error</a></span><span class="default">);</span>
+<a name="617"><font size=-1>617     </font></a><span class="default"></span>
+<a name="618"><font size=-1>618     </font></a><span class="default">  </span><span class="comment">/// Returns a string containing the error message corresponding to a</span>
+<a name="619"><font size=-1>619     </font></a><span class="comment">  /// WinSock error.  This works around an omission in the Win32 API.</span>
+<a name="620"><font size=-1>620     </font></a><span class="comment">  /// @internal</span>
+<a name="621"><font size=-1>621     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> const <a href="dictionary_A.html#47">ACE_TCHAR</a> </span><span class="default">* <a href="dictionary_S.html#12032">sock_error</a> (</span><span class="keyword">int <a href="dictionary_E.html#12033">error</a></span><span class="default">);</span>
+<a name="622"><font size=-1>622     </font></a><span class="default"></span>
+<a name="623"><font size=-1>623     </font></a><span class="default">  </span><span class="comment">/// Determins whether the given error code corresponds to to a</span>
+<a name="624"><font size=-1>624     </font></a><span class="comment">  /// WinSock error. If so returns true, false otherwise.</span>
+<a name="625"><font size=-1>625     </font></a><span class="comment">  /// @internal</span>
+<a name="626"><font size=-1>626     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> bool <a href="dictionary_I.html#11913">is_sock_error</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_E.html#11914">error</a></span><span class="default">);</span>
+<a name="627"><font size=-1>627     </font></a><span class="default"></span>
+<a name="628"><font size=-1>628     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="629"><font size=-1>629     </font></a><span class="comment">   * Checks if process with {pid} is still alive.  Returns 1 if it is</span>
+<a name="630"><font size=-1>630     </font></a><span class="comment">   * still alive, 0 if it isn't alive, and -1 if something weird</span>
+<a name="631"><font size=-1>631     </font></a><span class="comment">   * happened.</span>
+<a name="632"><font size=-1>632     </font></a><span class="comment">   */</span>
+<a name="633"><font size=-1>633     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_P.html#11926">process_active</a> </span><span class="default">(pid_t <a href="dictionary_P.html#11927">pid</a>);</span>
+<a name="634"><font size=-1>634     </font></a><span class="default"></span>
+<a name="635"><font size=-1>635     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="636"><font size=-1>636     </font></a><span class="comment">   * Terminate the process abruptly with id @a pid.  On Win32 platforms</span>
+<a name="637"><font size=-1>637     </font></a><span class="comment">   * this uses {TerminateProcess} and on POSIX platforms is uses</span>
+<a name="638"><font size=-1>638     </font></a><span class="comment">   * {kill} with the -9 (SIGKILL) signal, which cannot be caught or</span>
+<a name="639"><font size=-1>639     </font></a><span class="comment">   * ignored.  Note that this call is potentially dangerous to use</span>
+<a name="640"><font size=-1>640     </font></a><span class="comment">   * since the process being terminated may not have a chance to</span>
+<a name="641"><font size=-1>641     </font></a><span class="comment">   * cleanup before it shuts down.</span>
+<a name="642"><font size=-1>642     </font></a><span class="comment">   */</span>
+<a name="643"><font size=-1>643     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_T.html#12054">terminate_process</a> </span><span class="default">(pid_t <a href="dictionary_P.html#12055">pid</a>);</span>
+<a name="644"><font size=-1>644     </font></a><span class="default"></span>
+<a name="645"><font size=-1>645     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="646"><font size=-1>646     </font></a><span class="comment">   * This method uses process id and object pointer to come up with a</span>
+<a name="647"><font size=-1>647     </font></a><span class="comment">   * machine wide unique name.  The process ID will provide uniqueness</span>
+<a name="648"><font size=-1>648     </font></a><span class="comment">   * between processes on the same machine. The &quot;this&quot; pointer of the</span>
+<a name="649"><font size=-1>649     </font></a><span class="comment">   * {object} will provide uniqueness between other &quot;live&quot; objects in</span>
+<a name="650"><font size=-1>650     </font></a><span class="comment">   * the same process. The uniqueness of this name is therefore only</span>
+<a name="651"><font size=-1>651     </font></a><span class="comment">   * valid for the life of {object}.</span>
+<a name="652"><font size=-1>652     </font></a><span class="comment">   */</span>
+<a name="653"><font size=-1>653     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="keyword">void <a href="dictionary_U.html#684">unique_name</a> </span><span class="default">(</span><span class="keyword">const void </span><span class="default">*<a href="dictionary_O.html#687">object</a>,</span>
+<a name="654"><font size=-1>654     </font></a><span class="default">                                                  <a href="dictionary_A.html#47">ACE_TCHAR</a> *<a href="dictionary_N.html#686">name</a>,</span>
+<a name="655"><font size=-1>655     </font></a><span class="default">                                                  size_t <a href="dictionary_L.html#685">length</a>);</span>
+<a name="656"><font size=-1>656     </font></a><span class="default"></span>
+<a name="657"><font size=-1>657     </font></a><span class="default">  </span><span class="comment">/// Computes the base 2 logarithm of {num}.</span>
+<a name="658"><font size=-1>658     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> <a href="dictionary_U.html#721">u_long</a> <a href="dictionary_L.html#554">log2</a> </span><span class="default">(<a href="dictionary_U.html#721">u_long</a> <a href="dictionary_N.html#556">num</a>);</span>
+<a name="659"><font size=-1>659     </font></a><span class="default"></span>
+<a name="660"><font size=-1>660     </font></a><span class="default">  </span><span class="comment">/// Helper to avoid comparing floating point values with ==</span>
+<a name="661"><font size=-1>661     </font></a><span class="comment">  /// (uses &lt; and &gt; operators).</span>
+<a name="662"><font size=-1>662     </font></a><span class="comment">  </span><span class="keyword">template </span><span class="default">&lt;</span><span class="keyword">typename <a href="dictionary_T.html#11902">T</a></span><span class="default">&gt;</span>
+<a name="663"><font size=-1>663     </font></a><span class="default">  </span><span class="keyword">bool <a href="dictionary_I.html#11901">is_equal</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_T.html#11902">T</a></span><span class="default">&amp; <a href="dictionary_A.html#11903">a</a>, </span><span class="keyword">const <a href="dictionary_T.html#11902">T</a></span><span class="default">&amp; <a href="dictionary_B.html#11904">b</a>)</span>
+<a name="664"><font size=-1>664     </font></a><span class="default">  {</span>
+<a name="665"><font size=-1>665     </font></a><span class="default">    </span><span class="keyword">return </span><span class="default">!((<a href="dictionary_A.html#11903">a</a> &lt; <a href="dictionary_B.html#11904">b</a>) || (<a href="dictionary_A.html#11903">a</a> &gt; <a href="dictionary_B.html#11904">b</a>));</span>
+<a name="666"><font size=-1>666     </font></a><span class="default">  }</span>
+<a name="667"><font size=-1>667     </font></a><span class="default"></span>
+<a name="668"><font size=-1>668     </font></a><span class="default">  </span><span class="comment">/// Helper to avoid comparing floating point values with !=</span>
+<a name="669"><font size=-1>669     </font></a><span class="comment">  /// (uses &lt; and &gt; operators).</span>
+<a name="670"><font size=-1>670     </font></a><span class="comment">  </span><span class="keyword">template </span><span class="default">&lt;</span><span class="keyword">typename <a href="dictionary_T.html#11906">T</a></span><span class="default">&gt;</span>
+<a name="671"><font size=-1>671     </font></a><span class="default">  </span><span class="keyword">bool <a href="dictionary_I.html#11905">is_inequal</a> </span><span class="default">(</span><span class="keyword">const <a href="dictionary_T.html#11906">T</a></span><span class="default">&amp; <a href="dictionary_A.html#11907">a</a>, </span><span class="keyword">const <a href="dictionary_T.html#11906">T</a></span><span class="default">&amp; <a href="dictionary_B.html#11908">b</a>)</span>
+<a name="672"><font size=-1>672     </font></a><span class="default">  {</span>
+<a name="673"><font size=-1>673     </font></a><span class="default">    </span><span class="keyword">return </span><span class="default">!<a href="dictionary_I.html#11901">is_equal</a> (<a href="dictionary_A.html#11907">a</a>, <a href="dictionary_B.html#11908">b</a>);</span>
+<a name="674"><font size=-1>674     </font></a><span class="default">  }</span>
+<a name="675"><font size=-1>675     </font></a><span class="default"></span>
+<a name="676"><font size=-1>676     </font></a><span class="default">  </span><span class="comment">/// Hex conversion utility.</span>
+<a name="677"><font size=-1>677     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_N.html#11922">nibble2hex</a> </span><span class="default">(<a href="dictionary_U.html#891">u_int</a> <a href="dictionary_N.html#11923">n</a>);</span>
+<a name="678"><font size=-1>678     </font></a><span class="default"></span>
+<a name="679"><font size=-1>679     </font></a><span class="default">  </span><span class="comment">/// Convert a hex character to its byte representation.</span>
+<a name="680"><font size=-1>680     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> <a href="dictionary_U.html#720">u_char</a> <a href="dictionary_H.html#548">hex2byte</a> </span><span class="default">(<a href="dictionary_A.html#47">ACE_TCHAR</a> <a href="dictionary_C.html#549">c</a>);</span>
+<a name="681"><font size=-1>681     </font></a><span class="default"></span>
+<a name="682"><font size=-1>682     </font></a><span class="default">  </span><span class="comment">// = Set/get the debug level.</span>
+<a name="683"><font size=-1>683     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> bool <a href="dictionary_D.html#11858">debug</a> </span><span class="default">();</span>
+<a name="684"><font size=-1>684     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> void <a href="dictionary_D.html#11859">debug</a> </span><span class="default">(</span><span class="keyword">bool <a href="dictionary_O.html#11860">onoff</a></span><span class="default">);</span>
+<a name="685"><font size=-1>685     </font></a><span class="default"></span>
+<a name="686"><font size=-1>686     </font></a><span class="default">  </span><span class="comment">/// Wrapper facade for @c select that uses @c ACE_Handle_Sets.</span>
+<a name="687"><font size=-1>687     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_S.html#11981">select</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_W.html#11985">width</a></span><span class="default">,</span>
+<a name="688"><font size=-1>688     </font></a><span class="default">                                <a href="dictionary_A.html#12079">ACE_Handle_Set</a> *<a href="dictionary_R.html#11983">readfds</a>,</span>
+<a name="689"><font size=-1>689     </font></a><span class="default">                                <a href="dictionary_A.html#12079">ACE_Handle_Set</a> *<a href="dictionary_W.html#11986">writefds</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="690"><font size=-1>690     </font></a><span class="default">                                <a href="dictionary_A.html#12079">ACE_Handle_Set</a> *<a href="dictionary_E.html#11982">exceptfds</a> = </span><span class="number">0</span><span class="default">,</span>
+<a name="691"><font size=-1>691     </font></a><span class="default">                                </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11984">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="692"><font size=-1>692     </font></a><span class="default"></span>
+<a name="693"><font size=-1>693     </font></a><span class="default">  </span><span class="comment">/// Wrapper facade for the most common use of @c select that uses</span>
+<a name="694"><font size=-1>694     </font></a><span class="comment">  /// @c ACE_Handle_Sets.</span>
+<a name="695"><font size=-1>695     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_S.html#11987">select</a> </span><span class="default">(</span><span class="keyword">int <a href="dictionary_W.html#11990">width</a></span><span class="default">,</span>
+<a name="696"><font size=-1>696     </font></a><span class="default">                                <a href="dictionary_A.html#12079">ACE_Handle_Set</a> &amp;<a href="dictionary_R.html#11988">readfds</a>,</span>
+<a name="697"><font size=-1>697     </font></a><span class="default">                                </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11989">timeout</a> = </span><span class="number">0</span><span class="default">);</span>
+<a name="698"><font size=-1>698     </font></a><span class="default"></span>
+<a name="699"><font size=-1>699     </font></a><span class="default">  </span><span class="comment">/// Timed wait for handle to get read ready.</span>
+<a name="700"><font size=-1>700     </font></a><span class="comment">  /// @retval -1 for error</span>
+<a name="701"><font size=-1>701     </font></a><span class="comment">  /// @retval 0 for timeout</span>
+<a name="702"><font size=-1>702     </font></a><span class="comment">  /// @retval 1 the handle is ready</span>
+<a name="703"><font size=-1>703     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="704"><font size=-1>704     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_H.html#539">handle_read_ready</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#540">handle</a>,</span>
+<a name="705"><font size=-1>705     </font></a><span class="default">                         </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#541">timeout</a>);</span>
+<a name="706"><font size=-1>706     </font></a><span class="default"></span>
+<a name="707"><font size=-1>707     </font></a><span class="default">  </span><span class="comment">/// Timed wait for handle to get write ready.</span>
+<a name="708"><font size=-1>708     </font></a><span class="comment">  /// @retval -1 for error</span>
+<a name="709"><font size=-1>709     </font></a><span class="comment">  /// @retval 0 for timeout</span>
+<a name="710"><font size=-1>710     </font></a><span class="comment">  /// @retval 1 the handle is ready</span>
+<a name="711"><font size=-1>711     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="712"><font size=-1>712     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_H.html#545">handle_write_ready</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#546">handle</a>,</span>
+<a name="713"><font size=-1>713     </font></a><span class="default">                          </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#547">timeout</a>);</span>
+<a name="714"><font size=-1>714     </font></a><span class="default"></span>
+<a name="715"><font size=-1>715     </font></a><span class="default">  </span><span class="comment">/// Timed wait for handle to get exception ready.</span>
+<a name="716"><font size=-1>716     </font></a><span class="comment">  /// @retval -1 for error</span>
+<a name="717"><font size=-1>717     </font></a><span class="comment">  /// @retval 0 for timeout</span>
+<a name="718"><font size=-1>718     </font></a><span class="comment">  /// @retval 1 the handle is ready</span>
+<a name="719"><font size=-1>719     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a></span>
+<a name="720"><font size=-1>720     </font></a><span class="comment">  </span><span class="keyword">int <a href="dictionary_H.html#536">handle_exception_ready</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#537">handle</a>,</span>
+<a name="721"><font size=-1>721     </font></a><span class="default">                              </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#538">timeout</a>);</span>
+<a name="722"><font size=-1>722     </font></a><span class="default"></span>
+<a name="723"><font size=-1>723     </font></a><span class="default">  </span><span class="comment">/// Timed wait for handle to get read, write, or exception ready.</span>
+<a name="724"><font size=-1>724     </font></a><span class="comment">  /// @retval -1 for error</span>
+<a name="725"><font size=-1>725     </font></a><span class="comment">  /// @retval 0 for timeout</span>
+<a name="726"><font size=-1>726     </font></a><span class="comment">  /// @retval 1 the handle is ready</span>
+<a name="727"><font size=-1>727     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_H.html#542">handle_ready</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#543">handle</a>,</span>
+<a name="728"><font size=-1>728     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#544">timeout</a>,</span>
+<a name="729"><font size=-1>729     </font></a><span class="default">                                      </span><span class="keyword">bool <a href="dictionary_R.html#11886">read_ready</a></span><span class="default">,</span>
+<a name="730"><font size=-1>730     </font></a><span class="default">                                      </span><span class="keyword">bool <a href="dictionary_W.html#11887">write_ready</a></span><span class="default">,</span>
+<a name="731"><font size=-1>731     </font></a><span class="default">                                      </span><span class="keyword">bool <a href="dictionary_E.html#11885">exception_ready</a></span><span class="default">);</span>
+<a name="732"><font size=-1>732     </font></a><span class="default"></span>
+<a name="733"><font size=-1>733     </font></a><span class="default">  </span><span class="comment">/// Wait for @a timeout before proceeding to a @c recv operation.</span>
+<a name="734"><font size=-1>734     </font></a><span class="comment">  /// @a val keeps track of whether we're in non-blocking mode or</span>
+<a name="735"><font size=-1>735     </font></a><span class="comment">  /// not.</span>
+<a name="736"><font size=-1>736     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_E.html#11864">enter_recv_timedwait</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11865">handle</a>,</span>
+<a name="737"><font size=-1>737     </font></a><span class="default">                                              </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#11866">timeout</a>,</span>
+<a name="738"><font size=-1>738     </font></a><span class="default">                                              </span><span class="keyword">int </span><span class="default">&amp;<a href="dictionary_V.html#11867">val</a>);</span>
+<a name="739"><font size=-1>739     </font></a><span class="default"></span>
+<a name="740"><font size=-1>740     </font></a><span class="default">  </span><span class="comment">/// Wait for @a timeout before proceeding to a @c send operation.</span>
+<a name="741"><font size=-1>741     </font></a><span class="comment">  /// @a val keeps track of whether we're in non-blocking mode or</span>
+<a name="742"><font size=-1>742     </font></a><span class="comment">  /// not.</span>
+<a name="743"><font size=-1>743     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> int <a href="dictionary_E.html#11868">enter_send_timedwait</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11869">handle</a>,</span>
+<a name="744"><font size=-1>744     </font></a><span class="default">                                              </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a></span><span class="default">* <a href="dictionary_T.html#11870">timeout</a>,</span>
+<a name="745"><font size=-1>745     </font></a><span class="default">                                              </span><span class="keyword">int </span><span class="default">&amp;<a href="dictionary_V.html#11871">val</a>);</span>
+<a name="746"><font size=-1>746     </font></a><span class="default"></span>
+<a name="747"><font size=-1>747     </font></a><span class="default">  </span><span class="comment">/// This makes sure that @a handle is set into non-blocking mode.</span>
+<a name="748"><font size=-1>748     </font></a><span class="comment">  /// @a val keeps track of whether were in non-blocking mode or not.</span>
+<a name="749"><font size=-1>749     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> void <a href="dictionary_R.html#11933">record_and_set_non_blocking_mode</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11934">handle</a>,</span>
+<a name="750"><font size=-1>750     </font></a><span class="default">                                                           </span><span class="keyword">int </span><span class="default">&amp;<a href="dictionary_V.html#11935">val</a>);</span>
+<a name="751"><font size=-1>751     </font></a><span class="default"></span>
+<a name="752"><font size=-1>752     </font></a><span class="default">  </span><span class="comment">/// Cleanup after a timed operation, restore the appropriate</span>
+<a name="753"><font size=-1>753     </font></a><span class="comment">  /// non-blocking status of @a handle.</span>
+<a name="754"><font size=-1>754     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> void <a href="dictionary_R.html#11974">restore_non_blocking_mode</a> </span><span class="default">(<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#11975">handle</a>,</span>
+<a name="755"><font size=-1>755     </font></a><span class="default">                                                    </span><span class="keyword">int <a href="dictionary_V.html#11976">val</a></span><span class="default">);</span>
+<a name="756"><font size=-1>756     </font></a><span class="default"></span>
+<a name="757"><font size=-1>757     </font></a><span class="default">  </span><span class="comment">// private:</span>
+<a name="758"><font size=-1>758     </font></a><span class="comment">  //   These functions aren't meant to be used internally, so they are</span>
+<a name="759"><font size=-1>759     </font></a><span class="comment">  //   not exported.</span>
+<a name="760"><font size=-1>760     </font></a><span class="comment"></span>
+<a name="761"><font size=-1>761     </font></a><span class="comment">  //</span>
+<a name="762"><font size=-1>762     </font></a><span class="comment">  // = Recv_n helpers</span>
+<a name="763"><font size=-1>763     </font></a><span class="comment">  //</span>
+<a name="764"><font size=-1>764     </font></a><span class="comment"></span>
+<a name="765"><font size=-1>765     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="default">ssize_t <a href="dictionary_R.html#564">recv_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#566">handle</a>,</span>
+<a name="766"><font size=-1>766     </font></a><span class="default">                                                </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#565">buf</a>,</span>
+<a name="767"><font size=-1>767     </font></a><span class="default">                                                size_t <a href="dictionary_L.html#567">len</a>);</span>
+<a name="768"><font size=-1>768     </font></a><span class="default"></span>
+<a name="769"><font size=-1>769     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#581">recv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#585">handle</a>,</span>
+<a name="770"><font size=-1>770     </font></a><span class="default">                                      </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#582">buf</a>,</span>
+<a name="771"><font size=-1>771     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#586">len</a>,</span>
+<a name="772"><font size=-1>772     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_F.html#584">flags</a></span><span class="default">,</span>
+<a name="773"><font size=-1>773     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#583">bytes_transferred</a>);</span>
+<a name="774"><font size=-1>774     </font></a><span class="default"></span>
+<a name="775"><font size=-1>775     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#587">recv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#591">handle</a>,</span>
+<a name="776"><font size=-1>776     </font></a><span class="default">                                      </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#588">buf</a>,</span>
+<a name="777"><font size=-1>777     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#592">len</a>,</span>
+<a name="778"><font size=-1>778     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_F.html#590">flags</a></span><span class="default">,</span>
+<a name="779"><font size=-1>779     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#593">timeout</a>,</span>
+<a name="780"><font size=-1>780     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#589">bytes_transferred</a>);</span>
+<a name="781"><font size=-1>781     </font></a><span class="default"></span>
+<a name="782"><font size=-1>782     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#725">ACE_HAS_TLI</a>)</span>
+<a name="783"><font size=-1>783     </font></a><span class="default"></span>
+<a name="784"><font size=-1>784     </font></a><span class="default">  </span><span class="keyword">extern </span><span class="default">ACE_Export ssize_t t_rcv_n_i (ACE_HANDLE handle,</span>
+<a name="785"><font size=-1>785     </font></a><span class="default">                                       </span><span class="keyword">void </span><span class="default">*buf,</span>
+<a name="786"><font size=-1>786     </font></a><span class="default">                                       size_t len,</span>
+<a name="787"><font size=-1>787     </font></a><span class="default">                                       </span><span class="keyword">int </span><span class="default">*flags,</span>
+<a name="788"><font size=-1>788     </font></a><span class="default">                                       size_t *bytes_transferred);</span>
+<a name="789"><font size=-1>789     </font></a><span class="default"></span>
+<a name="790"><font size=-1>790     </font></a><span class="default">  </span><span class="keyword">extern </span><span class="default">ACE_Export ssize_t t_rcv_n_i (ACE_HANDLE handle,</span>
+<a name="791"><font size=-1>791     </font></a><span class="default">                                       </span><span class="keyword">void </span><span class="default">*buf,</span>
+<a name="792"><font size=-1>792     </font></a><span class="default">                                       size_t len,</span>
+<a name="793"><font size=-1>793     </font></a><span class="default">                                       </span><span class="keyword">int </span><span class="default">*flags,</span>
+<a name="794"><font size=-1>794     </font></a><span class="default">                                       </span><span class="keyword">const </span><span class="default">ACE_Time_Value *timeout,</span>
+<a name="795"><font size=-1>795     </font></a><span class="default">                                       size_t *bytes_transferred);</span>
+<a name="796"><font size=-1>796     </font></a><span class="default"></span>
+<a name="797"><font size=-1>797     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_TLI */</span>
+<a name="798"><font size=-1>798     </font></a><span class="comment"></span>
+<a name="799"><font size=-1>799     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#594">recv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#597">handle</a>,</span>
+<a name="800"><font size=-1>800     </font></a><span class="default">                                      </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#595">buf</a>,</span>
+<a name="801"><font size=-1>801     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#598">len</a>,</span>
+<a name="802"><font size=-1>802     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#596">bytes_transferred</a>);</span>
+<a name="803"><font size=-1>803     </font></a><span class="default"></span>
+<a name="804"><font size=-1>804     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#599">recv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#602">handle</a>,</span>
+<a name="805"><font size=-1>805     </font></a><span class="default">                                      </span><span class="keyword">void </span><span class="default">*<a href="dictionary_B.html#600">buf</a>,</span>
+<a name="806"><font size=-1>806     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#603">len</a>,</span>
+<a name="807"><font size=-1>807     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#604">timeout</a>,</span>
+<a name="808"><font size=-1>808     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#601">bytes_transferred</a>);</span>
+<a name="809"><font size=-1>809     </font></a><span class="default"></span>
+<a name="810"><font size=-1>810     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#611">recvv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#613">handle</a>,</span>
+<a name="811"><font size=-1>811     </font></a><span class="default">                                       iovec *<a href="dictionary_I.html#614">iov</a>,</span>
+<a name="812"><font size=-1>812     </font></a><span class="default">                                       </span><span class="keyword">int <a href="dictionary_I.html#615">iovcnt</a></span><span class="default">,</span>
+<a name="813"><font size=-1>813     </font></a><span class="default">                                       size_t *<a href="dictionary_B.html#612">bytes_transferred</a>);</span>
+<a name="814"><font size=-1>814     </font></a><span class="default"></span>
+<a name="815"><font size=-1>815     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_R.html#616">recvv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#618">handle</a>,</span>
+<a name="816"><font size=-1>816     </font></a><span class="default">                                       iovec *<a href="dictionary_I.html#619">iov</a>,</span>
+<a name="817"><font size=-1>817     </font></a><span class="default">                                       </span><span class="keyword">int <a href="dictionary_I.html#620">iovcnt</a></span><span class="default">,</span>
+<a name="818"><font size=-1>818     </font></a><span class="default">                                       </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#621">timeout</a>,</span>
+<a name="819"><font size=-1>819     </font></a><span class="default">                                       size_t *<a href="dictionary_B.html#617">bytes_transferred</a>);</span>
+<a name="820"><font size=-1>820     </font></a><span class="default"></span>
+<a name="821"><font size=-1>821     </font></a><span class="default">  </span><span class="comment">//</span>
+<a name="822"><font size=-1>822     </font></a><span class="comment">  // = Send_n helpers</span>
+<a name="823"><font size=-1>823     </font></a><span class="comment">  //</span>
+<a name="824"><font size=-1>824     </font></a><span class="comment"></span>
+<a name="825"><font size=-1>825     </font></a><span class="comment">  <a href="dictionary_A.html#44">ACE_NAMESPACE_INLINE_FUNCTION</a> </span><span class="default">ssize_t <a href="dictionary_S.html#622">send_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#624">handle</a>,</span>
+<a name="826"><font size=-1>826     </font></a><span class="default">                                                </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#623">buf</a>,</span>
+<a name="827"><font size=-1>827     </font></a><span class="default">                                                size_t <a href="dictionary_L.html#625">len</a>);</span>
+<a name="828"><font size=-1>828     </font></a><span class="default"></span>
+<a name="829"><font size=-1>829     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#639">send_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#643">handle</a>,</span>
+<a name="830"><font size=-1>830     </font></a><span class="default">                                      </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#640">buf</a>,</span>
+<a name="831"><font size=-1>831     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#644">len</a>,</span>
+<a name="832"><font size=-1>832     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_F.html#642">flags</a></span><span class="default">,</span>
+<a name="833"><font size=-1>833     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#641">bytes_transferred</a>);</span>
+<a name="834"><font size=-1>834     </font></a><span class="default"></span>
+<a name="835"><font size=-1>835     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#645">send_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#649">handle</a>,</span>
+<a name="836"><font size=-1>836     </font></a><span class="default">                                      </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#646">buf</a>,</span>
+<a name="837"><font size=-1>837     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#650">len</a>,</span>
+<a name="838"><font size=-1>838     </font></a><span class="default">                                      </span><span class="keyword">int <a href="dictionary_F.html#648">flags</a></span><span class="default">,</span>
+<a name="839"><font size=-1>839     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#651">timeout</a>,</span>
+<a name="840"><font size=-1>840     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#647">bytes_transferred</a>);</span>
+<a name="841"><font size=-1>841     </font></a><span class="default"></span>
+<a name="842"><font size=-1>842     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_A.html#725">ACE_HAS_TLI</a>)</span>
+<a name="843"><font size=-1>843     </font></a><span class="default"></span>
+<a name="844"><font size=-1>844     </font></a><span class="default">  </span><span class="keyword">extern </span><span class="default">ACE_Export ssize_t t_snd_n_i (ACE_HANDLE handle,</span>
+<a name="845"><font size=-1>845     </font></a><span class="default">                                       </span><span class="keyword">const void </span><span class="default">*buf,</span>
+<a name="846"><font size=-1>846     </font></a><span class="default">                                       size_t len,</span>
+<a name="847"><font size=-1>847     </font></a><span class="default">                                       </span><span class="keyword">int </span><span class="default">flags,</span>
+<a name="848"><font size=-1>848     </font></a><span class="default">                                       size_t *bytes_transferred);</span>
+<a name="849"><font size=-1>849     </font></a><span class="default"></span>
+<a name="850"><font size=-1>850     </font></a><span class="default">  </span><span class="keyword">extern </span><span class="default">ACE_Export ssize_t t_snd_n_i (ACE_HANDLE handle,</span>
+<a name="851"><font size=-1>851     </font></a><span class="default">                                       </span><span class="keyword">const void </span><span class="default">*buf,</span>
+<a name="852"><font size=-1>852     </font></a><span class="default">                                       size_t len,</span>
+<a name="853"><font size=-1>853     </font></a><span class="default">                                       </span><span class="keyword">int </span><span class="default">flags,</span>
+<a name="854"><font size=-1>854     </font></a><span class="default">                                       </span><span class="keyword">const </span><span class="default">ACE_Time_Value *timeout,</span>
+<a name="855"><font size=-1>855     </font></a><span class="default">                                       size_t *bytes_transferred);</span>
+<a name="856"><font size=-1>856     </font></a><span class="default"></span>
+<a name="857"><font size=-1>857     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_HAS_TLI */</span>
+<a name="858"><font size=-1>858     </font></a><span class="comment"></span>
+<a name="859"><font size=-1>859     </font></a><span class="comment">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#652">send_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#655">handle</a>,</span>
+<a name="860"><font size=-1>860     </font></a><span class="default">                                      </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#653">buf</a>,</span>
+<a name="861"><font size=-1>861     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#656">len</a>,</span>
+<a name="862"><font size=-1>862     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#654">bytes_transferred</a>);</span>
+<a name="863"><font size=-1>863     </font></a><span class="default"></span>
+<a name="864"><font size=-1>864     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#657">send_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#660">handle</a>,</span>
+<a name="865"><font size=-1>865     </font></a><span class="default">                                      </span><span class="keyword">const void </span><span class="default">*<a href="dictionary_B.html#658">buf</a>,</span>
+<a name="866"><font size=-1>866     </font></a><span class="default">                                      size_t <a href="dictionary_L.html#661">len</a>,</span>
+<a name="867"><font size=-1>867     </font></a><span class="default">                                      </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#662">timeout</a>,</span>
+<a name="868"><font size=-1>868     </font></a><span class="default">                                      size_t *<a href="dictionary_B.html#659">bytes_transferred</a>);</span>
+<a name="869"><font size=-1>869     </font></a><span class="default"></span>
+<a name="870"><font size=-1>870     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#669">sendv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#671">handle</a>,</span>
+<a name="871"><font size=-1>871     </font></a><span class="default">                                       </span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#672">iov</a>,</span>
+<a name="872"><font size=-1>872     </font></a><span class="default">                                       </span><span class="keyword">int <a href="dictionary_I.html#673">iovcnt</a></span><span class="default">,</span>
+<a name="873"><font size=-1>873     </font></a><span class="default">                                       size_t *<a href="dictionary_B.html#670">bytes_transferred</a>);</span>
+<a name="874"><font size=-1>874     </font></a><span class="default"></span>
+<a name="875"><font size=-1>875     </font></a><span class="default">  </span><span class="keyword">extern <a href="dictionary_A.html#43">ACE_Export</a> </span><span class="default">ssize_t <a href="dictionary_S.html#674">sendv_n_i</a> (<a href="dictionary_A.html#16">ACE_HANDLE</a> <a href="dictionary_H.html#676">handle</a>,</span>
+<a name="876"><font size=-1>876     </font></a><span class="default">                                       </span><span class="keyword">const </span><span class="default">iovec *<a href="dictionary_I.html#677">iov</a>,</span>
+<a name="877"><font size=-1>877     </font></a><span class="default">                                       </span><span class="keyword">int <a href="dictionary_I.html#678">iovcnt</a></span><span class="default">,</span>
+<a name="878"><font size=-1>878     </font></a><span class="default">                                       </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">*<a href="dictionary_T.html#679">timeout</a>,</span>
+<a name="879"><font size=-1>879     </font></a><span class="default">                                       size_t *<a href="dictionary_B.html#675">bytes_transferred</a>);</span>
+<a name="880"><font size=-1>880     </font></a><span class="default">}</span>
+<a name="881"><font size=-1>881     </font></a><span class="default"></span>
+<a name="882"><font size=-1>882     </font></a><span class="default"></span><span class="comment">// Close versioned namespace, if enabled by the user.</span>
+<a name="883"><font size=-1>883     </font></a><span class="comment"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="884"><font size=-1>884     </font></a><span class="comment"></span>
+<a name="885"><font size=-1>885     </font></a><span class="comment"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_&.html#302">__ACE_INLINE__</a>)</span>
+<a name="886"><font size=-1>886     </font></a><span class="default"></span><span class="preproc">#include </span><span class="string">&quot;ace/ACE.inl&quot;</span>
+<a name="887"><font size=-1>887     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* __ACE_INLINE__ */</span>
+<a name="888"><font size=-1>888     </font></a><span class="comment"></span>
+<a name="889"><font size=-1>889     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="890"><font size=-1>890     </font></a><span class="string"></span>
+<a name="891"><font size=-1>891     </font></a><span class="string"></span><span class="preproc">#endif  </span><span class="comment">/* ACE_ACE_H */</span>
+<a name="892"><font size=-1>892     </font></a><span class="comment"></span>
+</pre></body></html>

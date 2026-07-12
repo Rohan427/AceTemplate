@@ -1,0 +1,166 @@
+<html><head><title>OS_Memory.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/OS_Memory.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/OS_Memory.h";
+top.document.title  = "OS_Memory.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//=============================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> *  @file   OS_Memory.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> *  @author Doug Schmidt &lt;d.schmidt@vanderbilt.edu&gt;</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> *  @author Jesper S. M|ller&lt;stophph@diku.dk&gt;</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment"> *  @author and a cast of thousands...</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"> */</span>
+<a name="11"><font size=-1>11     </font></a><span class="comment">//=============================================================================</span>
+<a name="12"><font size=-1>12     </font></a><span class="comment"></span>
+<a name="13"><font size=-1>13     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#8956">ACE_OS_MEMORY_H</a></span>
+<a name="14"><font size=-1>14     </font></a><span class="preproc">#define <a href="dictionary_A.html#8956">ACE_OS_MEMORY_H</a></span>
+<a name="15"><font size=-1>15     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="16"><font size=-1>16     </font></a><span class="string"></span>
+<a name="17"><font size=-1>17     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/ACE_export.h&quot;</span>
+<a name="18"><font size=-1>18     </font></a><span class="string"></span>
+<a name="19"><font size=-1>19     </font></a><span class="string"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#26">ACE_LACKS_PRAGMA_ONCE</a>)</span>
+<a name="20"><font size=-1>20     </font></a><span class="default"></span><span class="preproc"># pragma </span><span class="default">once</span>
+<a name="21"><font size=-1>21     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_PRAGMA_ONCE */</span>
+<a name="22"><font size=-1>22     </font></a><span class="comment"></span>
+<a name="23"><font size=-1>23     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/OS_Errno.h&quot;</span>
+<a name="24"><font size=-1>24     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/Basic_Types.h&quot;</span>
+<a name="25"><font size=-1>25     </font></a><span class="string"></span><span class="preproc">#include </span><span class="string">&quot;ace/os_include/os_stddef.h&quot;</span>
+<a name="26"><font size=-1>26     </font></a><span class="string"></span>
+<a name="27"><font size=-1>27     </font></a><span class="string"></span><span class="comment">// Allow an installation to replace the lowest-level allocation</span>
+<a name="28"><font size=-1>28     </font></a><span class="comment">// functions without changing the source of ACE.</span>
+<a name="29"><font size=-1>29     </font></a><span class="comment">//</span>
+<a name="30"><font size=-1>30     </font></a><span class="comment">// To do this, simple #define ACE_*_FUNC macros in config.h to</span>
+<a name="31"><font size=-1>31     </font></a><span class="comment">// the names of the site-specific functions, e.g.,</span>
+<a name="32"><font size=-1>32     </font></a><span class="comment">//</span>
+<a name="33"><font size=-1>33     </font></a><span class="comment">//   #define ACE_MALLOC_FUNC  dlmalloc</span>
+<a name="34"><font size=-1>34     </font></a><span class="comment">//   #define ACE_CALLOC_FUNC  dlcalloc</span>
+<a name="35"><font size=-1>35     </font></a><span class="comment">//   #define ACE_FREE_FUNC    dlfree</span>
+<a name="36"><font size=-1>36     </font></a><span class="comment">//   #define ACE_REALLOC_FUNC dlrealloc</span>
+<a name="37"><font size=-1>37     </font></a><span class="comment">//</span>
+<a name="38"><font size=-1>38     </font></a><span class="comment">// For completeness' sake, you should probably put</span>
+<a name="39"><font size=-1>39     </font></a><span class="comment">//   #define ACE_HAS_STRDUP_EMULATION</span>
+<a name="40"><font size=-1>40     </font></a><span class="comment">//   #define ACE_HAS_WCSDUP_EMULATION</span>
+<a name="41"><font size=-1>41     </font></a><span class="comment">// too, so that you guarantee that strdup() and wcsdup() call your</span>
+<a name="42"><font size=-1>42     </font></a><span class="comment">// desired mallocator and not the system mallocator.</span>
+<a name="43"><font size=-1>43     </font></a><span class="comment">//</span>
+<a name="44"><font size=-1>44     </font></a><span class="comment"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8954">ACE_MALLOC_FUNC</a>)</span>
+<a name="45"><font size=-1>45     </font></a><span class="default"></span><span class="preproc">#  define <a href="dictionary_A.html#8954">ACE_MALLOC_FUNC</a> </span><span class="default">::malloc</span>
+<a name="46"><font size=-1>46     </font></a><span class="default"></span><span class="preproc">#endif</span>
+<a name="47"><font size=-1>47     </font></a><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8952">ACE_CALLOC_FUNC</a>)</span>
+<a name="48"><font size=-1>48     </font></a><span class="default"></span><span class="preproc">#  define <a href="dictionary_A.html#8952">ACE_CALLOC_FUNC</a> </span><span class="default">::calloc</span>
+<a name="49"><font size=-1>49     </font></a><span class="default"></span><span class="preproc">#endif</span>
+<a name="50"><font size=-1>50     </font></a><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8953">ACE_FREE_FUNC</a>)</span>
+<a name="51"><font size=-1>51     </font></a><span class="default"></span><span class="preproc">#  define <a href="dictionary_A.html#8953">ACE_FREE_FUNC</a> </span><span class="default">::free</span>
+<a name="52"><font size=-1>52     </font></a><span class="default"></span><span class="preproc">#endif</span>
+<a name="53"><font size=-1>53     </font></a><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#8957">ACE_REALLOC_FUNC</a>)</span>
+<a name="54"><font size=-1>54     </font></a><span class="default"></span><span class="preproc">#  define <a href="dictionary_A.html#8957">ACE_REALLOC_FUNC</a> </span><span class="default">::realloc</span>
+<a name="55"><font size=-1>55     </font></a><span class="default"></span><span class="preproc">#endif</span>
+<a name="56"><font size=-1>56     </font></a><span class="preproc"></span>
+<a name="57"><font size=-1>57     </font></a><span class="preproc"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="58"><font size=-1>58     </font></a><span class="preproc"></span>
+<a name="59"><font size=-1>59     </font></a><span class="preproc"></span><span class="keyword">typedef void </span><span class="default">* <a href="dictionary_A.html#8955">ACE_MALLOC_T</a>;</span>
+<a name="60"><font size=-1>60     </font></a><span class="default"></span>
+<a name="61"><font size=-1>61     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="62"><font size=-1>62     </font></a><span class="default"></span>
+<a name="63"><font size=-1>63     </font></a><span class="default"></span><span class="comment">// For backwards compatibility, we except all compilers to support these</span>
+<a name="64"><font size=-1>64     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&lt;new&gt;</span>
+<a name="65"><font size=-1>65     </font></a><span class="string"></span><span class="preproc">#define <a href="dictionary_A.html#8962">ACE_bad_alloc</a> </span><span class="default">std::bad_alloc</span>
+<a name="66"><font size=-1>66     </font></a><span class="default"></span><span class="preproc">#define <a href="dictionary_A.html#8964">ACE_nothrow</a>   </span><span class="default">std::nothrow</span>
+<a name="67"><font size=-1>67     </font></a><span class="default"></span><span class="preproc">#define <a href="dictionary_A.html#8965">ACE_nothrow_t</a> </span><span class="default">std::nothrow_t</span>
+<a name="68"><font size=-1>68     </font></a><span class="default"></span><span class="preproc">#define <a href="dictionary_A.html#8963">ACE_del_bad_alloc</a></span>
+<a name="69"><font size=-1>69     </font></a><span class="preproc">#define <a href="dictionary_A.html#8972">ACE_throw_bad_alloc</a> </span><span class="default">throw std::bad_alloc ()</span>
+<a name="70"><font size=-1>70     </font></a><span class="default"></span>
+<a name="71"><font size=-1>71     </font></a><span class="default"></span><span class="comment">// ACE_NEW macros</span>
+<a name="72"><font size=-1>72     </font></a><span class="comment"></span><span class="preproc">#define <a href="dictionary_A.html#1778">ACE_NEW_RETURN</a></span><span class="default">(POINTER,CONSTRUCTOR,RET_VAL) </span><span class="preproc">\</span>
+<a name="73"><font size=-1>73     </font></a><span class="preproc">   </span><span class="default">do { POINTER = new (std::nothrow) CONSTRUCTOR; </span><span class="preproc">\</span>
+<a name="74"><font size=-1>74     </font></a><span class="preproc">     </span><span class="default">if (POINTER == nullptr) { errno = ENOMEM; return RET_VAL; } </span><span class="preproc">\</span>
+<a name="75"><font size=-1>75     </font></a><span class="preproc">   </span><span class="default">} while (</span><span class="number">0</span><span class="default">)</span>
+<a name="76"><font size=-1>76     </font></a><span class="default"></span><span class="preproc">#define <a href="dictionary_A.html#368">ACE_NEW</a></span><span class="default">(POINTER,CONSTRUCTOR) </span><span class="preproc">\</span>
+<a name="77"><font size=-1>77     </font></a><span class="preproc">   </span><span class="default">do { POINTER = new(std::nothrow) CONSTRUCTOR; </span><span class="preproc">\</span>
+<a name="78"><font size=-1>78     </font></a><span class="preproc">     </span><span class="default">if (POINTER == nullptr) { errno = ENOMEM; return; } </span><span class="preproc">\</span>
+<a name="79"><font size=-1>79     </font></a><span class="preproc">   </span><span class="default">} while (</span><span class="number">0</span><span class="default">)</span>
+<a name="80"><font size=-1>80     </font></a><span class="default"></span><span class="preproc">#define <a href="dictionary_A.html#1777">ACE_NEW_NORETURN</a></span><span class="default">(POINTER,CONSTRUCTOR) </span><span class="preproc">\</span>
+<a name="81"><font size=-1>81     </font></a><span class="preproc">   </span><span class="default">do { POINTER = new(std::nothrow) CONSTRUCTOR; </span><span class="preproc">\</span>
+<a name="82"><font size=-1>82     </font></a><span class="preproc">     </span><span class="default">if (POINTER == nullptr) { errno = ENOMEM; } </span><span class="preproc">\</span>
+<a name="83"><font size=-1>83     </font></a><span class="preproc">   </span><span class="default">} while (</span><span class="number">0</span><span class="default">)</span>
+<a name="84"><font size=-1>84     </font></a><span class="default"></span>
+<a name="85"><font size=-1>85     </font></a><span class="default"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="86"><font size=-1>86     </font></a><span class="default"></span><span class="comment">//@{</span>
+<a name="87"><font size=-1>87     </font></a><span class="comment">/**</span>
+<a name="88"><font size=-1>88     </font></a><span class="comment"> * @name Efficiently compute aligned pointers to powers of 2 boundaries.</span>
+<a name="89"><font size=-1>89     </font></a><span class="comment"> */</span>
+<a name="90"><font size=-1>90     </font></a><span class="comment"></span>
+<a name="91"><font size=-1>91     </font></a><span class="comment">/**</span>
+<a name="92"><font size=-1>92     </font></a><span class="comment"> * Efficiently align &quot;value&quot; up to &quot;alignment&quot;, knowing that all such</span>
+<a name="93"><font size=-1>93     </font></a><span class="comment"> * boundaries are binary powers and that we're using two's complement</span>
+<a name="94"><font size=-1>94     </font></a><span class="comment"> * arithmetic.</span>
+<a name="95"><font size=-1>95     </font></a><span class="comment"> *</span>
+<a name="96"><font size=-1>96     </font></a><span class="comment"> * Since the alignment is a power of two its binary representation is:</span>
+<a name="97"><font size=-1>97     </font></a><span class="comment"> *</span>
+<a name="98"><font size=-1>98     </font></a><span class="comment"> * alignment      = 0...010...0</span>
+<a name="99"><font size=-1>99     </font></a><span class="comment"> *</span>
+<a name="100"><font size=-1>100     </font></a><span class="comment"> * hence</span>
+<a name="101"><font size=-1>101     </font></a><span class="comment"> *</span>
+<a name="102"><font size=-1>102     </font></a><span class="comment"> * alignment - 1  = 0...001...1 = T1</span>
+<a name="103"><font size=-1>103     </font></a><span class="comment"> *</span>
+<a name="104"><font size=-1>104     </font></a><span class="comment"> * so the complement is:</span>
+<a name="105"><font size=-1>105     </font></a><span class="comment"> *</span>
+<a name="106"><font size=-1>106     </font></a><span class="comment"> * ~(alignment - 1) = 1...110...0 = T2</span>
+<a name="107"><font size=-1>107     </font></a><span class="comment"> *</span>
+<a name="108"><font size=-1>108     </font></a><span class="comment"> * Notice that there is a multiple of @a alignment in the range</span>
+<a name="109"><font size=-1>109     </font></a><span class="comment"> * [&lt;value&gt;,&lt;value&gt; + T1], also notice that if</span>
+<a name="110"><font size=-1>110     </font></a><span class="comment"> *</span>
+<a name="111"><font size=-1>111     </font></a><span class="comment"> * X = ( &lt;value&gt; + T1 ) &amp; T2</span>
+<a name="112"><font size=-1>112     </font></a><span class="comment"> *</span>
+<a name="113"><font size=-1>113     </font></a><span class="comment"> * then</span>
+<a name="114"><font size=-1>114     </font></a><span class="comment"> *</span>
+<a name="115"><font size=-1>115     </font></a><span class="comment"> * &lt;value&gt; &lt;= X &lt;= &lt;value&gt; + T1</span>
+<a name="116"><font size=-1>116     </font></a><span class="comment"> *</span>
+<a name="117"><font size=-1>117     </font></a><span class="comment"> * because the &amp; operator only changes the last bits, and since X is a</span>
+<a name="118"><font size=-1>118     </font></a><span class="comment"> * multiple of @a alignment (its last bits are zero) we have found the</span>
+<a name="119"><font size=-1>119     </font></a><span class="comment"> * multiple we wanted.</span>
+<a name="120"><font size=-1>120     </font></a><span class="comment"> */</span>
+<a name="121"><font size=-1>121     </font></a><span class="comment">/// Return the next integer aligned to a required boundary</span>
+<a name="122"><font size=-1>122     </font></a><span class="comment">/**</span>
+<a name="123"><font size=-1>123     </font></a><span class="comment"> * @param ptr the base pointer</span>
+<a name="124"><font size=-1>124     </font></a><span class="comment"> * @param alignment the required alignment</span>
+<a name="125"><font size=-1>125     </font></a><span class="comment"> */</span>
+<a name="126"><font size=-1>126     </font></a><span class="comment"></span><span class="keyword">inline </span><span class="default">uintptr_t</span>
+<a name="127"><font size=-1>127     </font></a><span class="default"><a href="dictionary_A.html#8958">ACE_align_binary</a> (uintptr_t <a href="dictionary_P.html#8960">ptr</a>, uintptr_t <a href="dictionary_A.html#8959">alignment</a>)</span>
+<a name="128"><font size=-1>128     </font></a><span class="default">{</span>
+<a name="129"><font size=-1>129     </font></a><span class="default">  uintptr_t </span><span class="keyword">const <a href="dictionary_T.html#8961">tmp</a> </span><span class="default">= <a href="dictionary_A.html#8959">alignment</a> - </span><span class="number">1</span><span class="default">;</span>
+<a name="130"><font size=-1>130     </font></a><span class="default">  </span><span class="keyword">return </span><span class="default">(<a href="dictionary_P.html#8960">ptr</a> + <a href="dictionary_T.html#8961">tmp</a>) &amp; (~<a href="dictionary_T.html#8961">tmp</a>);</span>
+<a name="131"><font size=-1>131     </font></a><span class="default">}</span>
+<a name="132"><font size=-1>132     </font></a><span class="default"></span>
+<a name="133"><font size=-1>133     </font></a><span class="default"></span><span class="comment">/// Return the next address aligned to a required boundary</span>
+<a name="134"><font size=-1>134     </font></a><span class="comment"></span><span class="keyword">inline char </span><span class="default">*</span>
+<a name="135"><font size=-1>135     </font></a><span class="default"><a href="dictionary_A.html#8966">ACE_ptr_align_binary</a> (</span><span class="keyword">char const </span><span class="default">* <a href="dictionary_P.html#8968">ptr</a>, uintptr_t <a href="dictionary_A.html#8967">alignment</a>)</span>
+<a name="136"><font size=-1>136     </font></a><span class="default">{</span>
+<a name="137"><font size=-1>137     </font></a><span class="default">  </span><span class="keyword">return</span>
+<a name="138"><font size=-1>138     </font></a><span class="keyword">    reinterpret_cast</span><span class="default">&lt;</span><span class="keyword">char </span><span class="default">*&gt; (</span>
+<a name="139"><font size=-1>139     </font></a><span class="default">      <a href="dictionary_A.html#8958">ACE_align_binary</a> (</span><span class="keyword">reinterpret_cast</span><span class="default">&lt;uintptr_t&gt; (<a href="dictionary_P.html#8968">ptr</a>), <a href="dictionary_A.html#8967">alignment</a>));</span>
+<a name="140"><font size=-1>140     </font></a><span class="default">}</span>
+<a name="141"><font size=-1>141     </font></a><span class="default"></span>
+<a name="142"><font size=-1>142     </font></a><span class="default"></span><span class="comment">/// Return the next address aligned to a required boundary</span>
+<a name="143"><font size=-1>143     </font></a><span class="comment"></span><span class="keyword">inline char </span><span class="default">*</span>
+<a name="144"><font size=-1>144     </font></a><span class="default"><a href="dictionary_A.html#8969">ACE_ptr_align_binary</a> (</span><span class="keyword">unsigned char const </span><span class="default">* <a href="dictionary_P.html#8971">ptr</a>, uintptr_t <a href="dictionary_A.html#8970">alignment</a>)</span>
+<a name="145"><font size=-1>145     </font></a><span class="default">{</span>
+<a name="146"><font size=-1>146     </font></a><span class="default">  </span><span class="keyword">return</span>
+<a name="147"><font size=-1>147     </font></a><span class="keyword">    <a href="dictionary_A.html#8966">ACE_ptr_align_binary</a> </span><span class="default">(</span><span class="keyword">reinterpret_cast</span><span class="default">&lt;</span><span class="keyword">char const </span><span class="default">*&gt; (<a href="dictionary_P.html#8971">ptr</a>), <a href="dictionary_A.html#8970">alignment</a>);</span>
+<a name="148"><font size=-1>148     </font></a><span class="default">}</span>
+<a name="149"><font size=-1>149     </font></a><span class="default"></span><span class="comment">//@}</span>
+<a name="150"><font size=-1>150     </font></a><span class="comment"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="151"><font size=-1>151     </font></a><span class="comment"></span>
+<a name="152"><font size=-1>152     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/OS_NS_stdlib.h&quot;</span>
+<a name="153"><font size=-1>153     </font></a><span class="string"></span>
+<a name="154"><font size=-1>154     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="155"><font size=-1>155     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* ACE_OS_MEMORY_H */</span>
+<a name="156"><font size=-1>156     </font></a><span class="comment"></span>
+</pre></body></html>

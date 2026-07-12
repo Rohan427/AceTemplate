@@ -1,0 +1,27 @@
+<html><head><title>RW_Thread_Mutex.inl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/RW_Thread_Mutex.inl</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/RW_Thread_Mutex.inl";
+top.document.title  = "RW_Thread_Mutex.inl";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment"></span>
+<a name="4"><font size=-1>4     </font></a><span class="comment"><a href="dictionary_A.html#10">ACE_INLINE</a> </span><span class="keyword">int</span>
+<a name="5"><font size=-1>5     </font></a><span class="keyword"><a href="dictionary_A.html#3638">ACE_RW_Thread_Mutex</a></span><span class="default">::<a href="dictionary_T.html#3644">tryacquire_write_upgrade</a> ()</span>
+<a name="6"><font size=-1>6     </font></a><span class="default">{</span>
+<a name="7"><font size=-1>7     </font></a><span class="default"></span><span class="comment">// ACE_TRACE (&quot;ACE_RW_Thread_Mutex::tryacquire_write_upgrade&quot;);</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment">  </span><span class="keyword">return </span><span class="default">ACE_OS::<a href="dictionary_R.html#2177">rw_trywrlock_upgrade</a> (&amp;</span><span class="keyword">this</span><span class="default">-&gt;<a href="dictionary_L.html#758">lock_</a>);</span>
+<a name="9"><font size=-1>9     </font></a><span class="default">}</span>
+<a name="10"><font size=-1>10     </font></a><span class="default"></span>
+<a name="11"><font size=-1>11     </font></a><span class="default"><a href="dictionary_A.html#10">ACE_INLINE</a></span>
+<a name="12"><font size=-1>12     </font></a><span class="default"><a href="dictionary_A.html#3638">ACE_RW_Thread_Mutex</a>::~<a href="dictionary_A.html#3645">ACE_RW_Thread_Mutex</a> ()</span>
+<a name="13"><font size=-1>13     </font></a><span class="default">{</span>
+<a name="14"><font size=-1>14     </font></a><span class="default">}</span>
+<a name="15"><font size=-1>15     </font></a><span class="default"></span>
+<a name="16"><font size=-1>16     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="17"><font size=-1>17     </font></a><span class="default"></span>
+</pre></body></html>

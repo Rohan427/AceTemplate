@@ -1,0 +1,94 @@
+<html><head><title>Log_Priority.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Log_Priority.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Log_Priority.h";
+top.document.title  = "Log_Priority.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//=============================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> *  @file    Log_Priority.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> *  @author Douglas C. Schmidt &lt;d.schmidt@vanderbilt.edu&gt;</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> */</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment">//=============================================================================</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"></span>
+<a name="11"><font size=-1>11     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#1800">ACE_LOG_PRIORITY_H</a></span>
+<a name="12"><font size=-1>12     </font></a><span class="preproc">#define <a href="dictionary_A.html#1800">ACE_LOG_PRIORITY_H</a></span>
+<a name="13"><font size=-1>13     </font></a><span class="preproc"></span>
+<a name="14"><font size=-1>14     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="15"><font size=-1>15     </font></a><span class="string"></span>
+<a name="16"><font size=-1>16     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/config-lite.h&quot;</span>
+<a name="17"><font size=-1>17     </font></a><span class="string"></span>
+<a name="18"><font size=-1>18     </font></a><span class="string"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="19"><font size=-1>19     </font></a><span class="string"></span>
+<a name="20"><font size=-1>20     </font></a><span class="string"></span><span class="comment">/**</span>
+<a name="21"><font size=-1>21     </font></a><span class="comment"> * @enum ACE_Log_Priority</span>
+<a name="22"><font size=-1>22     </font></a><span class="comment"> *</span>
+<a name="23"><font size=-1>23     </font></a><span class="comment"> * @brief This data type indicates the relative priorities of the</span>
+<a name="24"><font size=-1>24     </font></a><span class="comment"> *    logging messages, from lowest to highest priority.</span>
+<a name="25"><font size=-1>25     </font></a><span class="comment"> *</span>
+<a name="26"><font size=-1>26     </font></a><span class="comment"> * These values are defined using powers of two so that it's</span>
+<a name="27"><font size=-1>27     </font></a><span class="comment"> * possible to form a mask to turn them on or off dynamically.</span>
+<a name="28"><font size=-1>28     </font></a><span class="comment"> * We only use 12 bits, however, so users are free to use the</span>
+<a name="29"><font size=-1>29     </font></a><span class="comment"> * remaining 19 bits to define their own priority masks.</span>
+<a name="30"><font size=-1>30     </font></a><span class="comment"> */</span>
+<a name="31"><font size=-1>31     </font></a><span class="comment"></span><span class="keyword">enum <a href="dictionary_A.html#1801">ACE_Log_Priority</a></span>
+<a name="32"><font size=-1>32     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="33"><font size=-1>33     </font></a><span class="default">  </span><span class="comment">// = Note, this first argument *must* start at 1!</span>
+<a name="34"><font size=-1>34     </font></a><span class="comment"></span>
+<a name="35"><font size=-1>35     </font></a><span class="comment">  /// Shutdown the logger (decimal 1).</span>
+<a name="36"><font size=-1>36     </font></a><span class="comment">  </span><span class="default">LM_SHUTDOWN = </span><span class="number">01</span><span class="default">,</span>
+<a name="37"><font size=-1>37     </font></a><span class="default"></span>
+<a name="38"><font size=-1>38     </font></a><span class="default">  </span><span class="comment">/// Messages indicating function-calling sequence (decimal 2).</span>
+<a name="39"><font size=-1>39     </font></a><span class="comment">  </span><span class="default">LM_TRACE = </span><span class="number">02</span><span class="default">,</span>
+<a name="40"><font size=-1>40     </font></a><span class="default"></span>
+<a name="41"><font size=-1>41     </font></a><span class="default">  </span><span class="comment">/// Messages that contain information normally of use only when</span>
+<a name="42"><font size=-1>42     </font></a><span class="comment">  /// debugging a program (decimal 4).</span>
+<a name="43"><font size=-1>43     </font></a><span class="comment">  </span><span class="default">LM_DEBUG = </span><span class="number">04</span><span class="default">,</span>
+<a name="44"><font size=-1>44     </font></a><span class="default"></span>
+<a name="45"><font size=-1>45     </font></a><span class="default">  </span><span class="comment">/// Informational messages (decimal 8).</span>
+<a name="46"><font size=-1>46     </font></a><span class="comment">  </span><span class="default">LM_INFO = </span><span class="number">010</span><span class="default">,</span>
+<a name="47"><font size=-1>47     </font></a><span class="default"></span>
+<a name="48"><font size=-1>48     </font></a><span class="default">  </span><span class="comment">/// Conditions that are not error conditions, but that may require</span>
+<a name="49"><font size=-1>49     </font></a><span class="comment">  /// special handling (decimal 16).</span>
+<a name="50"><font size=-1>50     </font></a><span class="comment">  </span><span class="default">LM_NOTICE = </span><span class="number">020</span><span class="default">,</span>
+<a name="51"><font size=-1>51     </font></a><span class="default"></span>
+<a name="52"><font size=-1>52     </font></a><span class="default">  </span><span class="comment">/// Warning messages (decimal 32).</span>
+<a name="53"><font size=-1>53     </font></a><span class="comment">  </span><span class="default">LM_WARNING = </span><span class="number">040</span><span class="default">,</span>
+<a name="54"><font size=-1>54     </font></a><span class="default"></span>
+<a name="55"><font size=-1>55     </font></a><span class="default">  </span><span class="comment">/// Initialize the logger (decimal 64).</span>
+<a name="56"><font size=-1>56     </font></a><span class="comment">  </span><span class="default">LM_STARTUP = </span><span class="number">0100</span><span class="default">,</span>
+<a name="57"><font size=-1>57     </font></a><span class="default"></span>
+<a name="58"><font size=-1>58     </font></a><span class="default">  </span><span class="comment">/// Error messages (decimal 128).</span>
+<a name="59"><font size=-1>59     </font></a><span class="comment">  </span><span class="default">LM_ERROR = </span><span class="number">0200</span><span class="default">,</span>
+<a name="60"><font size=-1>60     </font></a><span class="default"></span>
+<a name="61"><font size=-1>61     </font></a><span class="default">  </span><span class="comment">/// Critical conditions, such as hard device errors (decimal 256).</span>
+<a name="62"><font size=-1>62     </font></a><span class="comment">  </span><span class="default">LM_CRITICAL = </span><span class="number">0400</span><span class="default">,</span>
+<a name="63"><font size=-1>63     </font></a><span class="default"></span>
+<a name="64"><font size=-1>64     </font></a><span class="default">  </span><span class="comment">/// A condition that should be corrected immediately, such as a</span>
+<a name="65"><font size=-1>65     </font></a><span class="comment">  /// corrupted system database (decimal 512).</span>
+<a name="66"><font size=-1>66     </font></a><span class="comment">  </span><span class="default">LM_ALERT = </span><span class="number">01000</span><span class="default">,</span>
+<a name="67"><font size=-1>67     </font></a><span class="default"></span>
+<a name="68"><font size=-1>68     </font></a><span class="default">  </span><span class="comment">/// A panic condition.  This is normally broadcast to all users</span>
+<a name="69"><font size=-1>69     </font></a><span class="comment">  /// (decimal 1024).</span>
+<a name="70"><font size=-1>70     </font></a><span class="comment">  </span><span class="default">LM_EMERGENCY = </span><span class="number">02000</span><span class="default">,</span>
+<a name="71"><font size=-1>71     </font></a><span class="default"></span>
+<a name="72"><font size=-1>72     </font></a><span class="default">  </span><span class="comment">/// The maximum logging priority.</span>
+<a name="73"><font size=-1>73     </font></a><span class="comment">  </span><span class="default">LM_MAX = LM_EMERGENCY,</span>
+<a name="74"><font size=-1>74     </font></a><span class="default"></span>
+<a name="75"><font size=-1>75     </font></a><span class="default">  </span><span class="comment">/// Do not use!!  This enum value ensures that the underlying</span>
+<a name="76"><font size=-1>76     </font></a><span class="comment">  /// integral type for this enum is at least 32 bits.</span>
+<a name="77"><font size=-1>77     </font></a><span class="comment">  </span><span class="default">LM_ENSURE_32_BITS = </span><span class="number">0x7FFFFFFF</span>
+<a name="78"><font size=-1>78     </font></a><span class="number"></span><span class="default">};</span>
+<a name="79"><font size=-1>79     </font></a><span class="default"></span>
+<a name="80"><font size=-1>80     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="81"><font size=-1>81     </font></a><span class="default"></span>
+<a name="82"><font size=-1>82     </font></a><span class="default"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="83"><font size=-1>83     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LOG_PRIORITY_H */</span>
+<a name="84"><font size=-1>84     </font></a><span class="comment"></span>
+</pre></body></html>

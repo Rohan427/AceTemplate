@@ -1,0 +1,223 @@
+<html><head><title>Dynamic_Message_Strategy.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="sourcestyles.css" />
+</head><body link="blue" vlink="blue">
+<h3>File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Dynamic_Message_Strategy.h</h3>
+<SCRIPT>
+defaultStatus = "File: /data/dev/src/ACE+TAO-8.0.5/ACE_wrappers/ace/Dynamic_Message_Strategy.h";
+top.document.title  = "Dynamic_Message_Strategy.h";
+</SCRIPT>
+<pre><span class="default"></span><a name="1"><font size=-1>1     </font></a><span class="default"></span><span class="comment">// -*- C++ -*-</span>
+<a name="2"><font size=-1>2     </font></a><span class="comment"></span>
+<a name="3"><font size=-1>3     </font></a><span class="comment">//==========================================================================</span>
+<a name="4"><font size=-1>4     </font></a><span class="comment">/**</span>
+<a name="5"><font size=-1>5     </font></a><span class="comment"> *  @file    Dynamic_Message_Strategy.h</span>
+<a name="6"><font size=-1>6     </font></a><span class="comment"> *</span>
+<a name="7"><font size=-1>7     </font></a><span class="comment"> *  @author Douglas C. Schmidt &lt;d.schmidt@vanderbilt.edu&gt;</span>
+<a name="8"><font size=-1>8     </font></a><span class="comment"> */</span>
+<a name="9"><font size=-1>9     </font></a><span class="comment">//==========================================================================</span>
+<a name="10"><font size=-1>10     </font></a><span class="comment"></span>
+<a name="11"><font size=-1>11     </font></a><span class="comment"></span><span class="preproc">#ifndef <a href="dictionary_A.html#7824">ACE_DYNAMIC_MESSAGE_STRATEGY_H</a></span>
+<a name="12"><font size=-1>12     </font></a><span class="preproc">#define <a href="dictionary_A.html#7824">ACE_DYNAMIC_MESSAGE_STRATEGY_H</a></span>
+<a name="13"><font size=-1>13     </font></a><span class="preproc"></span>
+<a name="14"><font size=-1>14     </font></a><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/pre.h&quot;</span>
+<a name="15"><font size=-1>15     </font></a><span class="string"></span>
+<a name="16"><font size=-1>16     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/config-lite.h&quot;</span>
+<a name="17"><font size=-1>17     </font></a><span class="string"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/ACE_export.h&quot;</span>
+<a name="18"><font size=-1>18     </font></a><span class="string"></span>
+<a name="19"><font size=-1>19     </font></a><span class="string"></span><span class="preproc">#if </span><span class="default">!</span><span class="preproc">defined </span><span class="default">(<a href="dictionary_A.html#26">ACE_LACKS_PRAGMA_ONCE</a>)</span>
+<a name="20"><font size=-1>20     </font></a><span class="default"></span><span class="preproc"># pragma </span><span class="default">once</span>
+<a name="21"><font size=-1>21     </font></a><span class="default"></span><span class="preproc">#endif </span><span class="comment">/* ACE_LACKS_PRAGMA_ONCE */</span>
+<a name="22"><font size=-1>22     </font></a><span class="comment"></span>
+<a name="23"><font size=-1>23     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="string">&quot;ace/Message_Block.h&quot;</span>
+<a name="24"><font size=-1>24     </font></a><span class="string"></span>
+<a name="25"><font size=-1>25     </font></a><span class="string"><a href="dictionary_A.html#11">ACE_BEGIN_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="26"><font size=-1>26     </font></a><span class="string"></span>
+<a name="27"><font size=-1>27     </font></a><span class="string"></span><span class="comment">/**</span>
+<a name="28"><font size=-1>28     </font></a><span class="comment"> * @class ACE_Dynamic_Message_Strategy</span>
+<a name="29"><font size=-1>29     </font></a><span class="comment"> *</span>
+<a name="30"><font size=-1>30     </font></a><span class="comment"> * @brief An abstract base class which provides dynamic priority</span>
+<a name="31"><font size=-1>31     </font></a><span class="comment"> * evaluation methods for use by the ACE_Dynamic_Message_Queue</span>
+<a name="32"><font size=-1>32     </font></a><span class="comment"> * class or any other class which needs to manage the priorities</span>
+<a name="33"><font size=-1>33     </font></a><span class="comment"> * of a collection of ACE_Message_Blocks dynamically.</span>
+<a name="34"><font size=-1>34     </font></a><span class="comment"> *</span>
+<a name="35"><font size=-1>35     </font></a><span class="comment"> * Methods for deadline and laxity based priority evaluation are</span>
+<a name="36"><font size=-1>36     </font></a><span class="comment"> * provided.  These methods assume a specific partitioning of</span>
+<a name="37"><font size=-1>37     </font></a><span class="comment"> * the message priority number into a higher order dynamic bit</span>
+<a name="38"><font size=-1>38     </font></a><span class="comment"> * field and a lower order static priority bit field.  The</span>
+<a name="39"><font size=-1>39     </font></a><span class="comment"> * default partitioning assumes an unsigned dynamic message</span>
+<a name="40"><font size=-1>40     </font></a><span class="comment"> * priority field of 22 bits and an unsigned static message</span>
+<a name="41"><font size=-1>41     </font></a><span class="comment"> * priority field of 10 bits.  This corresponds to the initial</span>
+<a name="42"><font size=-1>42     </font></a><span class="comment"> * values of the static class members.  To provide a different</span>
+<a name="43"><font size=-1>43     </font></a><span class="comment"> * partitioning, assign a different set of values to the static</span>
+<a name="44"><font size=-1>44     </font></a><span class="comment"> * class members before using the static member functions.</span>
+<a name="45"><font size=-1>45     </font></a><span class="comment"> */</span>
+<a name="46"><font size=-1>46     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#1223">ACE_Dynamic_Message_Strategy</a></span>
+<a name="47"><font size=-1>47     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="48"><font size=-1>48     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="49"><font size=-1>49     </font></a><span class="default">  </span><span class="comment">/// Message priority status</span>
+<a name="50"><font size=-1>50     </font></a><span class="comment">  /// Values are defined as bit flags so that status combinations may</span>
+<a name="51"><font size=-1>51     </font></a><span class="comment">  /// be specified easily.</span>
+<a name="52"><font size=-1>52     </font></a><span class="comment">  </span><span class="keyword">enum <a href="dictionary_P.html#1224">Priority_Status</a></span>
+<a name="53"><font size=-1>53     </font></a><span class="keyword">  </span><span class="default">{</span>
+<a name="54"><font size=-1>54     </font></a><span class="default">    </span><span class="comment">/// Message can still make its deadline</span>
+<a name="55"><font size=-1>55     </font></a><span class="comment">    </span><span class="default">PENDING     = </span><span class="number">0x01</span><span class="default">,</span>
+<a name="56"><font size=-1>56     </font></a><span class="default">    </span><span class="comment">/// Message cannot make its deadline</span>
+<a name="57"><font size=-1>57     </font></a><span class="comment">    </span><span class="default">LATE        = </span><span class="number">0x02</span><span class="default">,</span>
+<a name="58"><font size=-1>58     </font></a><span class="default">    </span><span class="comment">/// Message is so late its priority is undefined</span>
+<a name="59"><font size=-1>59     </font></a><span class="comment">    </span><span class="default">BEYOND_LATE = </span><span class="number">0x04</span><span class="default">,</span>
+<a name="60"><font size=-1>60     </font></a><span class="default">    </span><span class="comment">/// Mask to match any priority status</span>
+<a name="61"><font size=-1>61     </font></a><span class="comment">    </span><span class="default">ANY_STATUS  = </span><span class="number">0x07</span>
+<a name="62"><font size=-1>62     </font></a><span class="number">  </span><span class="default">};</span>
+<a name="63"><font size=-1>63     </font></a><span class="default"></span>
+<a name="64"><font size=-1>64     </font></a><span class="default">  </span><span class="comment">/// Constructor.</span>
+<a name="65"><font size=-1>65     </font></a><span class="comment">  <a href="dictionary_A.html#7834">ACE_Dynamic_Message_Strategy</a> </span><span class="default">(</span><span class="keyword">unsigned long <a href="dictionary_S.html#7837">static_bit_field_mask</a></span><span class="default">,</span>
+<a name="66"><font size=-1>66     </font></a><span class="default">                                </span><span class="keyword">unsigned long <a href="dictionary_S.html#7838">static_bit_field_shift</a></span><span class="default">,</span>
+<a name="67"><font size=-1>67     </font></a><span class="default">                                </span><span class="keyword">unsigned long <a href="dictionary_D.html#7835">dynamic_priority_max</a></span><span class="default">,</span>
+<a name="68"><font size=-1>68     </font></a><span class="default">                                </span><span class="keyword">unsigned long <a href="dictionary_D.html#7836">dynamic_priority_offset</a></span><span class="default">);</span>
+<a name="69"><font size=-1>69     </font></a><span class="default"></span>
+<a name="70"><font size=-1>70     </font></a><span class="default">  </span><span class="comment">/// Virtual destructor.</span>
+<a name="71"><font size=-1>71     </font></a><span class="comment">  </span><span class="keyword">virtual </span><span class="default">~<a href="dictionary_A.html#1231">ACE_Dynamic_Message_Strategy</a> () = </span><span class="keyword">default</span><span class="default">;</span>
+<a name="72"><font size=-1>72     </font></a><span class="default"></span>
+<a name="73"><font size=-1>73     </font></a><span class="default">  </span><span class="comment">/// Updates the message's priority and returns its priority status.</span>
+<a name="74"><font size=-1>74     </font></a><span class="comment">  <a href="dictionary_P.html#1224">Priority_Status</a> <a href="dictionary_P.html#1228">priority_status</a> </span><span class="default">(<a href="dictionary_A.html#774">ACE_Message_Block</a> &amp;<a href="dictionary_M.html#1229">mb</a>,</span>
+<a name="75"><font size=-1>75     </font></a><span class="default">                                   </span><span class="keyword">const <a href="dictionary_A.html#718">ACE_Time_Value</a> </span><span class="default">&amp;<a href="dictionary_T.html#1230">tv</a>);</span>
+<a name="76"><font size=-1>76     </font></a><span class="default"></span>
+<a name="77"><font size=-1>77     </font></a><span class="default">  </span><span class="comment">/// Get static bit field mask.</span>
+<a name="78"><font size=-1>78     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_S.html#7859">static_bit_field_mask</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="79"><font size=-1>79     </font></a><span class="default"></span>
+<a name="80"><font size=-1>80     </font></a><span class="default">  </span><span class="comment">/// Set static bit field mask.</span>
+<a name="81"><font size=-1>81     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_S.html#7860">static_bit_field_mask</a> </span><span class="default">(</span><span class="keyword">unsigned long</span><span class="default">);</span>
+<a name="82"><font size=-1>82     </font></a><span class="default"></span>
+<a name="83"><font size=-1>83     </font></a><span class="default">  </span><span class="comment">/// Get left shift value to make room for static bit field.</span>
+<a name="84"><font size=-1>84     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_S.html#7863">static_bit_field_shift</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="85"><font size=-1>85     </font></a><span class="default"></span>
+<a name="86"><font size=-1>86     </font></a><span class="default">  </span><span class="comment">/// Set left shift value to make room for static bit field.</span>
+<a name="87"><font size=-1>87     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_S.html#7864">static_bit_field_shift</a> </span><span class="default">(</span><span class="keyword">unsigned long</span><span class="default">);</span>
+<a name="88"><font size=-1>88     </font></a><span class="default"></span>
+<a name="89"><font size=-1>89     </font></a><span class="default">  </span><span class="comment">/// Get maximum supported priority value.</span>
+<a name="90"><font size=-1>90     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_D.html#7846">dynamic_priority_max</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="91"><font size=-1>91     </font></a><span class="default"></span>
+<a name="92"><font size=-1>92     </font></a><span class="default">  </span><span class="comment">/// Set maximum supported priority value.</span>
+<a name="93"><font size=-1>93     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_D.html#7847">dynamic_priority_max</a> </span><span class="default">(</span><span class="keyword">unsigned long</span><span class="default">);</span>
+<a name="94"><font size=-1>94     </font></a><span class="default"></span>
+<a name="95"><font size=-1>95     </font></a><span class="default">  </span><span class="comment">/// Get offset to boundary between signed range and unsigned range.</span>
+<a name="96"><font size=-1>96     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_D.html#7850">dynamic_priority_offset</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="97"><font size=-1>97     </font></a><span class="default"></span>
+<a name="98"><font size=-1>98     </font></a><span class="default">  </span><span class="comment">/// Set offset to boundary between signed range and unsigned range.</span>
+<a name="99"><font size=-1>99     </font></a><span class="comment">  </span><span class="keyword">void <a href="dictionary_D.html#7851">dynamic_priority_offset</a> </span><span class="default">(</span><span class="keyword">unsigned long</span><span class="default">);</span>
+<a name="100"><font size=-1>100     </font></a><span class="default"></span>
+<a name="101"><font size=-1>101     </font></a><span class="default">  </span><span class="comment">/// Dump the state of the strategy.</span>
+<a name="102"><font size=-1>102     </font></a><span class="comment">  </span><span class="keyword">virtual void <a href="dictionary_D.html#7845">dump</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="103"><font size=-1>103     </font></a><span class="default"></span>
+<a name="104"><font size=-1>104     </font></a><span class="default"></span><span class="keyword">protected</span><span class="default">:</span>
+<a name="105"><font size=-1>105     </font></a><span class="default">  </span><span class="comment">/// Hook method for dynamic priority conversion.</span>
+<a name="106"><font size=-1>106     </font></a><span class="comment">  </span><span class="keyword">virtual void <a href="dictionary_C.html#7842">convert_priority</a> </span><span class="default">(<a href="dictionary_A.html#718">ACE_Time_Value</a> &amp;<a href="dictionary_P.html#7844">priority</a>,</span>
+<a name="107"><font size=-1>107     </font></a><span class="default">                                 </span><span class="keyword">const <a href="dictionary_A.html#774">ACE_Message_Block</a> </span><span class="default">&amp;<a href="dictionary_M.html#7843">mb</a>) = </span><span class="number">0</span><span class="default">;</span>
+<a name="108"><font size=-1>108     </font></a><span class="default"></span>
+<a name="109"><font size=-1>109     </font></a><span class="default">  </span><span class="comment">/// This is a bit mask with all ones in the static bit field.</span>
+<a name="110"><font size=-1>110     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_S.html#7862">static_bit_field_mask_</a></span><span class="default">;</span>
+<a name="111"><font size=-1>111     </font></a><span class="default"></span>
+<a name="112"><font size=-1>112     </font></a><span class="default">  </span><span class="comment">/**</span>
+<a name="113"><font size=-1>113     </font></a><span class="comment">   * This is a left shift value to make room for static bit field:</span>
+<a name="114"><font size=-1>114     </font></a><span class="comment">   * this value should be the logarithm base 2 of</span>
+<a name="115"><font size=-1>115     </font></a><span class="comment">   * (static_bit_field_mask_ + 1).</span>
+<a name="116"><font size=-1>116     </font></a><span class="comment">   */</span>
+<a name="117"><font size=-1>117     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_S.html#7866">static_bit_field_shift_</a></span><span class="default">;</span>
+<a name="118"><font size=-1>118     </font></a><span class="default"></span>
+<a name="119"><font size=-1>119     </font></a><span class="default">  </span><span class="comment">/// Maximum supported priority value.</span>
+<a name="120"><font size=-1>120     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_D.html#7849">dynamic_priority_max_</a></span><span class="default">;</span>
+<a name="121"><font size=-1>121     </font></a><span class="default"></span>
+<a name="122"><font size=-1>122     </font></a><span class="default">  </span><span class="comment">/// Offset to boundary between signed range and unsigned range.</span>
+<a name="123"><font size=-1>123     </font></a><span class="comment">  </span><span class="keyword">unsigned long <a href="dictionary_D.html#7853">dynamic_priority_offset_</a></span><span class="default">;</span>
+<a name="124"><font size=-1>124     </font></a><span class="default"></span>
+<a name="125"><font size=-1>125     </font></a><span class="default">  </span><span class="comment">/// Maximum late time value that can be represented.</span>
+<a name="126"><font size=-1>126     </font></a><span class="comment">  <a href="dictionary_A.html#718">ACE_Time_Value</a> <a href="dictionary_M.html#7854">max_late_</a></span><span class="default">;</span>
+<a name="127"><font size=-1>127     </font></a><span class="default"></span>
+<a name="128"><font size=-1>128     </font></a><span class="default">  </span><span class="comment">/// Minimum pending time value that can be represented.</span>
+<a name="129"><font size=-1>129     </font></a><span class="comment">  <a href="dictionary_A.html#718">ACE_Time_Value</a> <a href="dictionary_M.html#7855">min_pending_</a></span><span class="default">;</span>
+<a name="130"><font size=-1>130     </font></a><span class="default"></span>
+<a name="131"><font size=-1>131     </font></a><span class="default">  </span><span class="comment">/// Time value by which to shift pending priority.</span>
+<a name="132"><font size=-1>132     </font></a><span class="comment">  <a href="dictionary_A.html#718">ACE_Time_Value</a> <a href="dictionary_P.html#7858">pending_shift_</a></span><span class="default">;</span>
+<a name="133"><font size=-1>133     </font></a><span class="default">};</span>
+<a name="134"><font size=-1>134     </font></a><span class="default"></span>
+<a name="135"><font size=-1>135     </font></a><span class="default"></span><span class="comment">/**</span>
+<a name="136"><font size=-1>136     </font></a><span class="comment"> * @class ACE_Deadline_Message_Strategy</span>
+<a name="137"><font size=-1>137     </font></a><span class="comment"> *</span>
+<a name="138"><font size=-1>138     </font></a><span class="comment"> * @brief Deadline based message priority strategy.</span>
+<a name="139"><font size=-1>139     </font></a><span class="comment"> *</span>
+<a name="140"><font size=-1>140     </font></a><span class="comment"> * Assigns dynamic message priority according to time to deadline.  The</span>
+<a name="141"><font size=-1>141     </font></a><span class="comment"> * message priority is divided into high and low order bit fields.  The</span>
+<a name="142"><font size=-1>142     </font></a><span class="comment"> * high order bit field is used for dynamic message priority, which is</span>
+<a name="143"><font size=-1>143     </font></a><span class="comment"> * updated whenever the convert_priority() method is called.  The</span>
+<a name="144"><font size=-1>144     </font></a><span class="comment"> * low order bit field is used for static message priority and is left</span>
+<a name="145"><font size=-1>145     </font></a><span class="comment"> * unchanged.  The partitioning of the priority value into high and low</span>
+<a name="146"><font size=-1>146     </font></a><span class="comment"> * order bit fields is done according to the arguments passed to the</span>
+<a name="147"><font size=-1>147     </font></a><span class="comment"> * strategy object's constructor.</span>
+<a name="148"><font size=-1>148     </font></a><span class="comment"> */</span>
+<a name="149"><font size=-1>149     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#1217">ACE_Deadline_Message_Strategy</a> </span><span class="default">: </span><span class="keyword">public <a href="dictionary_A.html#1223">ACE_Dynamic_Message_Strategy</a></span>
+<a name="150"><font size=-1>150     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="151"><font size=-1>151     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="152"><font size=-1>152     </font></a><span class="default">  </span><span class="comment">/// Constructor with all arguments defaulted.</span>
+<a name="153"><font size=-1>153     </font></a><span class="comment">  <a href="dictionary_A.html#1218">ACE_Deadline_Message_Strategy</a> </span><span class="default">(</span><span class="keyword">unsigned long <a href="dictionary_S.html#1221">static_bit_field_mask</a> </span><span class="default">= </span><span class="number">0x3FFUL</span><span class="default">,       </span><span class="comment">// 2^(10) - 1</span>
+<a name="154"><font size=-1>154     </font></a><span class="comment">                                 </span><span class="keyword">unsigned long <a href="dictionary_S.html#1222">static_bit_field_shift</a> </span><span class="default">= </span><span class="number">10</span><span class="default">,           </span><span class="comment">// 10 low order bits</span>
+<a name="155"><font size=-1>155     </font></a><span class="comment">                                 </span><span class="keyword">unsigned long <a href="dictionary_D.html#1219">dynamic_priority_max</a> </span><span class="default">= </span><span class="number">0x3FFFFFUL</span><span class="default">,     </span><span class="comment">// 2^(22)-1</span>
+<a name="156"><font size=-1>156     </font></a><span class="comment">                                 </span><span class="keyword">unsigned long <a href="dictionary_D.html#1220">dynamic_priority_offset</a> </span><span class="default">= </span><span class="number">0x200000UL</span><span class="default">); </span><span class="comment">// 2^(22-1)</span>
+<a name="157"><font size=-1>157     </font></a><span class="comment"></span>
+<a name="158"><font size=-1>158     </font></a><span class="comment">  /// Virtual destructor.</span>
+<a name="159"><font size=-1>159     </font></a><span class="comment">  </span><span class="keyword">virtual </span><span class="default">~<a href="dictionary_A.html#7833">ACE_Deadline_Message_Strategy</a> () = </span><span class="keyword">default</span><span class="default">;</span>
+<a name="160"><font size=-1>160     </font></a><span class="default"></span>
+<a name="161"><font size=-1>161     </font></a><span class="default">  </span><span class="comment">/// Dynamic priority conversion function based on time to deadline.</span>
+<a name="162"><font size=-1>162     </font></a><span class="comment">  </span><span class="keyword">virtual void <a href="dictionary_C.html#7827">convert_priority</a> </span><span class="default">(<a href="dictionary_A.html#718">ACE_Time_Value</a> &amp;<a href="dictionary_P.html#7829">priority</a>,</span>
+<a name="163"><font size=-1>163     </font></a><span class="default">                                 </span><span class="keyword">const <a href="dictionary_A.html#774">ACE_Message_Block</a> </span><span class="default">&amp;<a href="dictionary_M.html#7828">mb</a>);</span>
+<a name="164"><font size=-1>164     </font></a><span class="default"></span>
+<a name="165"><font size=-1>165     </font></a><span class="default">  </span><span class="comment">/// Dump the state of the strategy.</span>
+<a name="166"><font size=-1>166     </font></a><span class="comment">  </span><span class="keyword">virtual void <a href="dictionary_D.html#7830">dump</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="167"><font size=-1>167     </font></a><span class="default">};</span>
+<a name="168"><font size=-1>168     </font></a><span class="default"></span>
+<a name="169"><font size=-1>169     </font></a><span class="default"></span><span class="comment">/**</span>
+<a name="170"><font size=-1>170     </font></a><span class="comment"> * @class ACE_Laxity_Message_Strategy</span>
+<a name="171"><font size=-1>171     </font></a><span class="comment"> *</span>
+<a name="172"><font size=-1>172     </font></a><span class="comment"> * @brief Laxity based message priority strategy.</span>
+<a name="173"><font size=-1>173     </font></a><span class="comment"> *</span>
+<a name="174"><font size=-1>174     </font></a><span class="comment"> * Assigns dynamic message priority according to laxity (time to</span>
+<a name="175"><font size=-1>175     </font></a><span class="comment"> * deadline minus worst case execution time).  The message priority is</span>
+<a name="176"><font size=-1>176     </font></a><span class="comment"> * divided into high and low order bit fields.  The high order</span>
+<a name="177"><font size=-1>177     </font></a><span class="comment"> * bit field is used for dynamic message priority, which is</span>
+<a name="178"><font size=-1>178     </font></a><span class="comment"> * updated whenever the convert_priority() method is called.  The</span>
+<a name="179"><font size=-1>179     </font></a><span class="comment"> * low order bit field is used for static message priority and is left</span>
+<a name="180"><font size=-1>180     </font></a><span class="comment"> * unchanged.  The partitioning of the priority value into high and low</span>
+<a name="181"><font size=-1>181     </font></a><span class="comment"> * order bit fields is done according to the arguments passed to the</span>
+<a name="182"><font size=-1>182     </font></a><span class="comment"> * strategy object's constructor.</span>
+<a name="183"><font size=-1>183     </font></a><span class="comment"> */</span>
+<a name="184"><font size=-1>184     </font></a><span class="comment"></span><span class="keyword">class <a href="dictionary_A.html#43">ACE_Export</a> <a href="dictionary_A.html#1232">ACE_Laxity_Message_Strategy</a> </span><span class="default">: </span><span class="keyword">public <a href="dictionary_A.html#1223">ACE_Dynamic_Message_Strategy</a></span>
+<a name="185"><font size=-1>185     </font></a><span class="keyword"></span><span class="default">{</span>
+<a name="186"><font size=-1>186     </font></a><span class="default"></span><span class="keyword">public</span><span class="default">:</span>
+<a name="187"><font size=-1>187     </font></a><span class="default">  </span><span class="comment">/// Ctor, with all arguments defaulted.</span>
+<a name="188"><font size=-1>188     </font></a><span class="comment">  <a href="dictionary_A.html#1233">ACE_Laxity_Message_Strategy</a> </span><span class="default">(</span><span class="keyword">unsigned long <a href="dictionary_S.html#1236">static_bit_field_mask</a> </span><span class="default">= </span><span class="number">0x3FFUL</span><span class="default">,       </span><span class="comment">// 2^(10) - 1</span>
+<a name="189"><font size=-1>189     </font></a><span class="comment">                               </span><span class="keyword">unsigned long <a href="dictionary_S.html#1237">static_bit_field_shift</a> </span><span class="default">= </span><span class="number">10</span><span class="default">,           </span><span class="comment">// 10 low order bits</span>
+<a name="190"><font size=-1>190     </font></a><span class="comment">                               </span><span class="keyword">unsigned long <a href="dictionary_D.html#1234">dynamic_priority_max</a> </span><span class="default">= </span><span class="number">0x3FFFFFUL</span><span class="default">,     </span><span class="comment">// 2^(22)-1</span>
+<a name="191"><font size=-1>191     </font></a><span class="comment">                               </span><span class="keyword">unsigned long <a href="dictionary_D.html#1235">dynamic_priority_offset</a> </span><span class="default">= </span><span class="number">0x200000UL</span><span class="default">); </span><span class="comment">// 2^(22-1)</span>
+<a name="192"><font size=-1>192     </font></a><span class="comment"></span>
+<a name="193"><font size=-1>193     </font></a><span class="comment">  /// virtual dtor.</span>
+<a name="194"><font size=-1>194     </font></a><span class="comment">  </span><span class="keyword">virtual </span><span class="default">~<a href="dictionary_A.html#7875">ACE_Laxity_Message_Strategy</a> () = </span><span class="keyword">default</span><span class="default">;</span>
+<a name="195"><font size=-1>195     </font></a><span class="default"></span>
+<a name="196"><font size=-1>196     </font></a><span class="default">  </span><span class="comment">/// Dynamic priority conversion function based on laxity.</span>
+<a name="197"><font size=-1>197     </font></a><span class="comment">  </span><span class="keyword">virtual void <a href="dictionary_C.html#7869">convert_priority</a> </span><span class="default">(<a href="dictionary_A.html#718">ACE_Time_Value</a> &amp;<a href="dictionary_P.html#7871">priority</a>,</span>
+<a name="198"><font size=-1>198     </font></a><span class="default">                                 </span><span class="keyword">const <a href="dictionary_A.html#774">ACE_Message_Block</a> </span><span class="default">&amp;<a href="dictionary_M.html#7870">mb</a>);</span>
+<a name="199"><font size=-1>199     </font></a><span class="default"></span>
+<a name="200"><font size=-1>200     </font></a><span class="default">  </span><span class="comment">/// Dump the state of the strategy.</span>
+<a name="201"><font size=-1>201     </font></a><span class="comment">  </span><span class="keyword">virtual void <a href="dictionary_D.html#7872">dump</a> </span><span class="default">() </span><span class="keyword">const</span><span class="default">;</span>
+<a name="202"><font size=-1>202     </font></a><span class="default">};</span>
+<a name="203"><font size=-1>203     </font></a><span class="default"></span>
+<a name="204"><font size=-1>204     </font></a><span class="default"><a href="dictionary_A.html#12">ACE_END_VERSIONED_NAMESPACE_DECL</a></span>
+<a name="205"><font size=-1>205     </font></a><span class="default"></span>
+<a name="206"><font size=-1>206     </font></a><span class="default"></span><span class="preproc">#if defined </span><span class="default">(<a href="dictionary_&.html#302">__ACE_INLINE__</a>)</span>
+<a name="207"><font size=-1>207     </font></a><span class="default"></span><span class="preproc">#include </span><span class="string">&quot;ace/Dynamic_Message_Strategy.inl&quot;</span>
+<a name="208"><font size=-1>208     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* __ACE_INLINE__ */</span>
+<a name="209"><font size=-1>209     </font></a><span class="comment"></span>
+<a name="210"><font size=-1>210     </font></a><span class="comment"></span><span class="preproc">#include </span><span class="comment">/**/ </span><span class="string">&quot;ace/post.h&quot;</span>
+<a name="211"><font size=-1>211     </font></a><span class="string"></span>
+<a name="212"><font size=-1>212     </font></a><span class="string"></span><span class="preproc">#endif </span><span class="comment">/* ACE_DYNAMIC_MESSAGE_STRATEGY_H */</span>
+<a name="213"><font size=-1>213     </font></a><span class="comment"></span>
+</pre></body></html>

@@ -1,31 +1,31 @@
-cmake_minimum_required (VERSION 3.16)
+cmake_minimum_required (VERSION 3.9)
 
 project (ACETemplateApp VERSION 1.0 LANGUAGES CXX C)
 
 # ==================== Compiler & Standard Detection ====================
-message(STATUS "CXX compiler: ${CMAKE_CXX_COMPILER}")
+message (STATUS "CXX compiler: ${CMAKE_CXX_COMPILER}")
 
-if(CMAKE_CXX_COMPILER MATCHES "amdclang" OR CMAKE_CXX_COMPILER MATCHES "rocm")
+if (CMAKE_CXX_COMPILER MATCHES "amdclang" OR CMAKE_CXX_COMPILER MATCHES "rocm")
     message(STATUS "ROCm amdclang detected - forcing C++17")
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
+    set (CMAKE_CXX_STANDARD 98)
+    set (CMAKE_CXX_STANDARD_REQUIRED ON)
+    set (CMAKE_CXX_EXTENSIONS OFF)
     
     # Force the flag explicitly for amdclang (CMake sometimes needs help)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-    add_compile_options(-std=c++17)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    add_compile_options(-std=c++98)
 else()
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
+    set (CMAKE_CXX_STANDARD 98)
+    set (CMAKE_CXX_STANDARD_REQUIRED ON)
+    set (CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
 # Legacy RHEL 6 fallback (gcc 4.4.7)
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7")
-    message(WARNING "Legacy GCC 4.4.7 detected - falling back to C++98 mode")
-    set(CMAKE_CXX_STANDARD 98)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-    add_definitions(-DLEGACY_GCC_44)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7")
+    message (WARNING "Legacy GCC 4.4.7 detected - falling back to C++98 mode")
+    set (CMAKE_CXX_STANDARD 98)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    add_definitions (-DLEGACY_GCC_44)
 endif()
 
 ################## Find ACE (and TAO if we need it) ##################
@@ -35,8 +35,8 @@ endif()
 #    find_path (TAO_INCLUDE_DIR tao/ORB.h PATHS "$ENV{TAO_ROOT}" NO_DEFAULT_PATH)
 #    find_library (TAO_LIBRARY NAMES TAO PATHS "$ENV{TAO_ROOT}/lib" NO_DEFAULT_PATH)
 
-find_path (ACE_INCLUDE_DIR ace/ACE.h PATHS "$ENV{ACE_ROOT}/include" NO_DEFAULT_PATH)
-find_library (ACE_LIBRARY NAMES libACE.so PATHS "$ENV{ACE_ROOT}/lib" NO_DEFAULT_PATH)
+find_path (ACE_INCLUDE_DIR ace/ACE.h PATHS "$ENV{ACE_ROOT}" NO_DEFAULT_PATH)
+find_library (ACE_LIBRARY NAMES libACE.so PATHS "$ENV{ACE_ROOT}/ace" NO_DEFAULT_PATH)
 
 #    find_path (TAO_INCLUDE_DIR tao/ORB.h PATHS ${TAO_ROOT} NO_DEFAULT_PATH)
 #    find_library (TAO_LIBRARY NAMES TAO PATHS ${TAO_ROOT}/lib NO_DEFAULT_PATH)
@@ -55,8 +55,8 @@ if (NOT ACE_LIBRARY) # OR NOT TAO_LIBRARY)
 endif()
 
 # Legacy ACE compatibility (older versions on RHEL 6)
-if(GCC_VERSION VERSION_LESS "4.7")
-    add_definitions(-DACE_LACKS_CXX11)
+if (GCC_VERSION VERSION_LESS "4.7")
+    add_definitions (-DACE_LACKS_CXX11)
 endif()
 
 # ==================== ACE Compile Definitions ====================
@@ -121,7 +121,7 @@ target_link_libraries (ACETemplateApp PRIVATE
 # Set standard per-platform (avoid hard C++17 on legacy gcc)
 if (NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR NOT GCC_VERSION VERSION_LESS "4.7")
     set_target_properties (ACETemplateApp PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 98
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
     )
